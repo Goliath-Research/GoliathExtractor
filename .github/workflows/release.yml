@@ -103,11 +103,12 @@ jobs:
           shopt -s nullglob
           FILES=( "${{ runner.temp }}/artifacts"/methyl-extractor-linux-*.tar.gz* )
           [[ ${#FILES[@]} -gt 0 ]] || { echo "No tarballs to publish"; exit 1; }
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "${FILES[@]}" --clobber
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${FILES[@]}" --clobber --repo "$GITHUB_REPOSITORY"
           else
             gh release create "$TAG" \
               --title "MethylExtractor ${VERSION}" \
               --generate-notes \
+              --repo "$GITHUB_REPOSITORY" \
               "${FILES[@]}"
           fi
