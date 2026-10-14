@@ -23,6 +23,11 @@ make_tree() {
   printf 'bin-%s\n' "$subdir" >"$dest/build/dynamic/$subdir/MethylExtractor"
   chmod +x "$dest/build/dynamic/$subdir/MethylExtractor"
   printf 'plugin-%s\n' "$subdir" >"$dest/build/dynamic/$subdir/hdf5_zstd_plugin/libH5Zzstd.so"
+  # Residual tree left by install_hdf5_zstd_plugin.sh after make plugin.
+  mkdir -p "$dest/build/dynamic/$subdir/hdf5_zstd_plugin/HDF5Plugin-Zstandard/build"
+  mkdir -p "$dest/build/dynamic/$subdir/hdf5_zstd_plugin/HDF5Plugin-Zstandard/.git"
+  printf 'source\n' >"$dest/build/dynamic/$subdir/hdf5_zstd_plugin/HDF5Plugin-Zstandard/CMakeLists.txt"
+  printf 'so\n' >"$dest/build/dynamic/$subdir/hdf5_zstd_plugin/HDF5Plugin-Zstandard/build/libH5Zzstd.so"
 }
 
 assert_tarball() {
@@ -36,6 +41,9 @@ assert_tarball() {
   [[ -f "$tarball" ]] || fail "missing tarball $tarball"
   tar -tzf "$tarball" | grep -qx 'bin/MethylExtractor' || fail "missing binary in $tarball"
   tar -tzf "$tarball" | grep -qx 'lib/hdf5_zstd_plugin/libH5Zzstd.so' || fail "missing plugin in $tarball"
+  if tar -tzf "$tarball" | grep -q 'HDF5Plugin-Zstandard\|\.git\|CMake'; then
+    fail "tarball includes plugin source tree"
+  fi
   tar -tzf "$tarball" | grep -qx 'VERSION.txt' || fail "missing VERSION.txt in $tarball"
   tar -tzf "$tarball" | grep -qx 'env.sh' || fail "missing env.sh in $tarball"
   tar -xzf "$tarball" -C "$extract"

@@ -130,8 +130,11 @@ trap 'rm -rf "$STAGING"' EXIT
 
 mkdir -p "$STAGING/bin" "$STAGING/lib"
 cp -a "$BIN" "$STAGING/bin/MethylExtractor"
-if [[ -d "$PLUGIN_SRC" ]]; then
-  cp -a "$PLUGIN_SRC" "$STAGING/lib/hdf5_zstd_plugin"
+# make plugin leaves the HDF5Plugin-Zstandard clone (source, .git, CMake)
+# beside libH5Zzstd.so. Ship only the shared library, matching make install.
+if [[ -f "$PLUGIN_SRC/libH5Zzstd.so" ]]; then
+  mkdir -p "$STAGING/lib/hdf5_zstd_plugin"
+  cp -a "$PLUGIN_SRC/libH5Zzstd.so" "$STAGING/lib/hdf5_zstd_plugin/"
 fi
 echo "$VERSION" >"$STAGING/VERSION.txt"
 
