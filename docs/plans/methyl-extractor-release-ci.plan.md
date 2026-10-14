@@ -1,6 +1,6 @@
 ---
 name: MethylExtractor release CI
-overview: Per-arch GitHub Actions release and PR workflows that build native binaries, package tarballs via GoliathWorkflow scripts, and publish GitHub Release assets on git tags.
+overview: Per-arch GitHub Actions release and PR workflows that build native binaries, package tarballs with the vendored scripts/package_methyl_extractor.sh, and publish GitHub Release assets on git tags.
 azure_devops:
   type: Task
   title: Register MethylExtractor release + PR pipelines; enable Universal Package publish per arch
@@ -26,7 +26,7 @@ todos:
     content: az artifacts universal publish per arch to feed methyl-extractor (SemVer without leading zeros)
     status: completed
   - id: multi-repo-checkout
-    content: Checkout MethylPipeline for scripts/package_methyl_extractor.sh and detect_platform.sh
+    content: Vendor scripts/package_methyl_extractor.sh instead of checking out MethylPipeline or GoliathWorkflow
     status: completed
   - id: ci-readme
     content: Document pipeline registration, ARM64 agent pool, and release flow in ci/README.md
@@ -61,7 +61,7 @@ See MethylPipeline [`docs/deployment/production_release.md`](https://github.com/
 ## Prerequisites
 
 - Artifacts feed **`methyl-extractor`** — build service **Contributor**
-- Multi-repo checkout permission for **Development/MethylPipeline**
+- Packaging script vendored at `scripts/package_methyl_extractor.sh` (no checkout of GoliathWorkflow or GoliathOmics)
 - Self-hosted pool **`build-arm64`** with at least one online agent
 
 Details: [`ci/README.md`](../../ci/README.md).

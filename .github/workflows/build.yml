@@ -6,6 +6,14 @@ on:
   pull_request:
 
 jobs:
+  package-script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Package script fixture
+        run: bash tests/test_package_methyl_extractor.sh
+
   build:
     runs-on: ubuntu-latest
     steps:

@@ -28,13 +28,6 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: MethylExtractor
-
-      - uses: actions/checkout@v4
-        with:
-          repository: Goliath-Research/GoliathWorkflow
-          path: GoliathWorkflow
 
       - name: Install build dependencies
         run: |
@@ -52,7 +45,6 @@ jobs:
             libzstd-dev
 
       - name: Build
-        working-directory: MethylExtractor
         run: |
           make deps || true
           make clean
@@ -73,8 +65,8 @@ jobs:
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           OUT="${{ runner.temp }}/methyl-extractor-linux-${{ matrix.arch }}.tar.gz"
-          bash GoliathWorkflow/scripts/package_methyl_extractor.sh \
-            --build-dir MethylExtractor \
+          bash scripts/package_methyl_extractor.sh \
+            --build-dir . \
             --arch "${{ matrix.arch }}" \
             --version "$VERSION" \
             --output "$OUT"
