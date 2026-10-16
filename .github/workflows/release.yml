@@ -21,10 +21,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Build on Ubuntu 22.04 (glibc 2.35) so the dynamically linked
+          # binary and bundled libs run on 22.04 and anything newer.
           - arch: amd64
-            runner: ubuntu-latest
+            runner: ubuntu-22.04
           - arch: aarch64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-22.04-arm
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
@@ -35,6 +37,7 @@ jobs:
           sudo apt-get install -y \
             build-essential \
             cmake \
+            patchelf \
             libhdf5-dev \
             libhts-dev \
             zlib1g-dev \
@@ -69,7 +72,9 @@ jobs:
             --build-dir . \
             --arch "${{ matrix.arch }}" \
             --version "$VERSION" \
-            --output "$OUT"
+            --output "$OUT" \
+            --bundle-libs
+          tar -tzvf "$OUT"
           sha256sum "$OUT" | tee "${OUT}.sha256"
 
       - uses: actions/upload-artifact@v4
@@ -79,8 +84,40 @@ jobs:
             ${{ runner.temp }}/methyl-extractor-linux-${{ matrix.arch }}.tar.gz
             ${{ runner.temp }}/methyl-extractor-linux-${{ matrix.arch }}.tar.gz.sha256
 
-  publish:
+  smoke:
+    # Bare images, no extra packages: every non-glibc lib must come from the
+    # tarball. Run via docker on the host so JS actions never run in-container.
     needs: package
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, aarch64]
+        image: ["ubuntu:22.04", "ubuntu:24.04", "ubuntu:latest", "debian:stable-slim"]
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: methyl-extractor-linux-${{ matrix.arch }}
+          path: ${{ runner.temp }}/artifacts
+
+      - name: Smoke test in ${{ matrix.image }}
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v "${{ runner.temp }}/artifacts:/artifacts:ro" \
+            -v "$PWD/scripts:/scripts:ro" \
+            "${{ matrix.image }}" \
+            sh /scripts/smoke_test_tarball.sh /artifacts/methyl-extractor-linux-${{ matrix.arch }}.tar.gz
+
+  publish:
+    needs: [package, smoke]
     runs-on: ubuntu-latest
     steps:
       - name: Download arch tarballs
