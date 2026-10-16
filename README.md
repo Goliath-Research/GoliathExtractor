@@ -52,6 +52,17 @@ make install
 
 This copies the MethylExtractor binary to `/usr/local/bin/`, the HDF5 Zstd plugin to `/usr/local/hdf5/lib/plugin`, and appends `HDF5_PLUGIN_PATH` to your `~/.bashrc`. Before copying anything, **architecture is checked**: the binary and plugin must match the current machine (e.g. you cannot install an arm64 build on an x86_64 host). If there is a mismatch, `make install` aborts with an error—run `make` on the target machine first.
 
+### Prebuilt release tarball
+GitHub Releases ship `methyl-extractor-linux-{amd64,aarch64}.tar.gz` (+ `.sha256`). They are dynamically linked but self-contained: built on Ubuntu 22.04 with every non-glibc library (htslib, HDF5, curl, ...) bundled in `lib/` and found via RPATH, so they run on bare Ubuntu 22.04+/Debian with no extra packages.
+
+```bash
+mkdir -p ~/methyl-extractor && tar -xzf methyl-extractor-linux-amd64.tar.gz -C ~/methyl-extractor
+. ~/methyl-extractor/env.sh   # PATH, HDF5_PLUGIN_PATH (Zstd plugin), LD_LIBRARY_PATH fallback
+MethylExtractor --help
+```
+
+See [docs/release_packaging.md](docs/release_packaging.md) for how the bundle is built and tested.
+
 ## Usage
 
 ### Basic Syntax

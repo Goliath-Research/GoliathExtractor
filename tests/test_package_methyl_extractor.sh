@@ -52,6 +52,7 @@ assert_tarball() {
   cmp -s "$extract/lib/hdf5_zstd_plugin/libH5Zzstd.so" "$plugin_file" || fail "plugin bytes mismatch"
   grep -q 'METHYL_EXTRACTOR_BIN=' "$extract/env.sh" || fail "env.sh missing METHYL_EXTRACTOR_BIN"
   grep -q 'HDF5_PLUGIN_PATH=' "$extract/env.sh" || fail "env.sh missing HDF5_PLUGIN_PATH"
+  grep -q 'LD_LIBRARY_PATH=' "$extract/env.sh" || fail "env.sh missing LD_LIBRARY_PATH fallback"
   [[ -x "$extract/bin/MethylExtractor" ]] || fail "extracted binary is not executable"
 }
 

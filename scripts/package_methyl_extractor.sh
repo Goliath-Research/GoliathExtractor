@@ -18,12 +18,17 @@ Options:
   --arch KEY           arm64|x64|aarch64|amd64 (default: detect)
   --version VER        Version string for tarball name (default: git describe or manual)
   --output PATH        Output tarball path
+  --bundle-libs        Copy all non-glibc shared libs into lib/ and set
+                       RPATHs (scripts/bundle_libs.sh; needs ldd + patchelf).
+                       Used by the release workflow.
   -h, --help           Show this help
 
 Output layout inside tarball:
   bin/MethylExtractor
-  lib/hdf5_zstd_plugin/
+  lib/hdf5_zstd_plugin/libH5Zzstd.so
+  lib/*.so*            (with --bundle-libs)
   VERSION.txt
+  env.sh
 
 Used by .github/workflows/release.yml
 EOF
@@ -72,6 +77,7 @@ ARCH=""
 VERSION=""
 OUTPUT=""
 VERSION_EXPLICIT=0
+BUNDLE_LIBS=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -79,6 +85,7 @@ while [[ $# -gt 0 ]]; do
     --arch) ARCH="${2:-}"; shift 2 ;;
     --version) VERSION="${2:-}"; VERSION_EXPLICIT=1; shift 2 ;;
     --output) OUTPUT="${2:-}"; shift 2 ;;
+    --bundle-libs) BUNDLE_LIBS=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1" >&2; usage; exit 1 ;;
   esac
@@ -138,12 +145,24 @@ if [[ -f "$PLUGIN_SRC/libH5Zzstd.so" ]]; then
 fi
 echo "$VERSION" >"$STAGING/VERSION.txt"
 
+if [[ "$BUNDLE_LIBS" -eq 1 ]]; then
+  bash "$(dirname "${BASH_SOURCE[0]}")/bundle_libs.sh" "$STAGING"
+fi
+
 cat >"$STAGING/env.sh" <<'ENVEOF'
 #!/bin/sh
-# Source after extract: source "$(dirname "$0")/env.sh"  (from install root)
-_ROOT="$(cd "$(dirname "$0")" && pwd)"
+# Source after extract: . /path/to/install-root/env.sh
+# bash locates this file itself; plain sh falls back to $0, then to
+# the current directory (cd into the install root first).
+_src="${BASH_SOURCE:-$0}"
+case "$_src" in */env.sh|env.sh) ;; *) _src=./env.sh ;; esac
+_ROOT="$(cd "$(dirname "$_src")" && pwd)"
+unset _src
 export METHYL_EXTRACTOR_BIN="$_ROOT/bin/MethylExtractor"
 export HDF5_PLUGIN_PATH="$_ROOT/lib/hdf5_zstd_plugin"
+# Bundled libs are found via RPATH; this is only a fallback (e.g. if a tool
+# strips RPATHs). Harmless when lib/ holds only the plugin.
+export LD_LIBRARY_PATH="$_ROOT/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 export PATH="$_ROOT/bin:$PATH"
 ENVEOF
 chmod +x "$STAGING/env.sh"
