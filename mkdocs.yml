@@ -1,5 +1,6 @@
 site_name: MethylExtractor
 site_description: Methylation extraction from coordinate-sorted bisulfite BAM files (release 2026.10.1).
+site_url: https://goliath-research.github.io/MethylExtractor/
 repo_url: https://github.com/Goliath-Research/MethylExtractor
 repo_name: Goliath-Research/MethylExtractor
 docs_dir: docs
@@ -41,4 +42,5 @@ nav:
       - Plans: plans/README.md
       - Release CI plan: plans/methyl-extractor-release-ci.plan.md
       - Performance plan: plans/methylextractor-c-perf.plan.md
-# Build locally or in CI with `mkdocs build`. This repository does not publish the site.
+# Build locally with `mkdocs build` or `mkdocs serve`.
+# A push to main publishes this site with .github/workflows/pages.yml.

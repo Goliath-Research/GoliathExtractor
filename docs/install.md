@@ -77,7 +77,7 @@ poetry run pyrefly check
 
 ## Documentation site
 
-The Markdown in `docs/` is an optional [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) site. CI builds it and does not deploy it.
+The Markdown in `docs/` is a [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) site, published at [goliath-research.github.io/MethylExtractor](https://goliath-research.github.io/MethylExtractor/). Pull requests run `mkdocs build --strict` and do not deploy. Pushes to `main` publish the site.
 
 ```bash
 pip install mkdocs-material

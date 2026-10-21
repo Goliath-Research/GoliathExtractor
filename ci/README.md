@@ -5,9 +5,10 @@ Workflows live in [`.github/workflows/`](../.github/workflows/).
 | Workflow | Trigger | Jobs |
 |----------|---------|------|
 | [`build.yml`](../.github/workflows/build.yml) | Push to `main` and pull requests | Packaging-script fixtures, `make dynamic` plus `--help`, Pyrefly, [`.goliath/product.json`](../.goliath/product.json) against its schema, `mkdocs build --strict` |
+| [`pages.yml`](../.github/workflows/pages.yml) | Push to `main` and manual dispatch | `mkdocs build --strict`, upload the `site` directory, deploy GitHub Pages |
 | [`release.yml`](../.github/workflows/release.yml) | Tags `v*` or a manual `releaseVersion` | amd64 and aarch64 tarballs, smoke in bare container images, GitHub Release upload |
 
-The docs job builds the MkDocs site and does not deploy it. Release packaging is [docs/release_packaging.md](../docs/release_packaging.md).
+The `docs` job in `build.yml` builds the MkDocs site and does not deploy it. `pages.yml` publishes [https://goliath-research.github.io/MethylExtractor/](https://goliath-research.github.io/MethylExtractor/) and does not run on pull requests. Release packaging is [docs/release_packaging.md](../docs/release_packaging.md).
 
 ## Release flow in this repository
 
