@@ -68,3 +68,62 @@ jobs:
 
       - name: Pyrefly
         run: poetry run pyrefly check
+
+  product-json:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate product summary
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check 'check-jsonschema>=0.29,<1'
+          check-jsonschema --schemafile .goliath/product.schema.json .goliath/product.json
+          python - <<'PY'
+          import json
+          import pathlib
+          import re
+
+          path = pathlib.Path(".goliath/product.json")
+          text = path.read_text(encoding="utf-8")
+          for banned in ("GoliathApp", "GoliathOmics"):
+              if banned in text:
+                  raise SystemExit(f"{path} must not mention {banned}")
+          data = json.loads(text)
+          if data.get("id") != "methylextractor":
+              raise SystemExit("id must be methylextractor")
+          depends = data.get("dependsOn", [])
+          if not isinstance(depends, list):
+              raise SystemExit("dependsOn must be an array of product ids when present")
+          description = data["description"].strip()
+          sentences = [part for part in re.split(r"(?<=[.!?])\s+", description) if part.strip()]
+          if not 2 <= len(sentences) <= 4:
+              raise SystemExit(
+                  f"description must be 2-4 sentences, found {len(sentences)}: {sentences!r}"
+              )
+          PY
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build MkDocs site
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check 'mkdocs-material>=9.5,<10'
+          mkdocs build --strict
+          if grep -RInE 'Goliath(App|Omics)' README.md docs ci/README.md .goliath/product.json; then
+            echo "README, docs, and product.json must not mention GoliathApp or GoliathOmics"
+            exit 1
+          fi
+          test ! -d site || test -f site/index.html
+

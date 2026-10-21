@@ -54,3 +54,6 @@ dkms.conf
 # Build output (binaries and the HDF5 Zstd plugin are produced by `make`,
 # released via .github/workflows/release.yml, never committed)
 build/
+
+# MkDocs HTML (`mkdocs build`). CI builds the site and does not publish it.
+site/

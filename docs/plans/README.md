@@ -1,38 +1,10 @@
-# Implementation plans (Azure DevOps traceability)
+# Plans
 
-This repo owns **MethylExtractor** build and release CI. Cross-repo Epics and orchestration plans live in [MethylPipeline `docs/plans`](https://github.com/Goliath-Research/GoliathWorkflow/blob/main/docs/plans).
+These notes record work that landed in this repository. The running description of the binary is the rest of `docs/` and `README.md`, for release 2026.10.1.
 
-## Work item mapping (this repo)
+| Note | What it tracks in this tree |
+|------|-----------------------------|
+| [Release CI](methyl-extractor-release-ci.plan.md) | `.github/workflows/build.yml` and `release.yml` |
+| [C performance](methylextractor-c-perf.plan.md) | `--chrom-parallel`, `--max-rss-gb`, `{sample}.timing.json` |
 
-| Plan file | ADO type | Parent Epic (MethylPipeline plan) | Task id |
-|-----------|----------|-----------------------------------|---------|
-| [`methyl-extractor-release-ci.plan.md`](methyl-extractor-release-ci.plan.md) | **Task** | [DevOps CI/CD release](https://github.com/Goliath-Research/GoliathWorkflow/blob/main/docs/plans/devops-ci-cd-release.plan.md) | `me-release-ci` |
-| [`methylextractor-c-perf.plan.md`](methylextractor-c-perf.plan.md) | **Task** | MethylExtractor C throughput (chrom-parallel, timing.json) | `me-c-perf` |
-| *(same plan)* | **Task** | [Production GPU worker layout](https://github.com/Goliath-Research/GoliathWorkflow/blob/main/docs/plans/production-gpu-worker-layout.plan.md) | `extractor-ci` |
-
-Create the **Task** in Azure DevOps under the appropriate Epic. Use the plan `todos[].content` for the task title. Mark **Closed** when merged.
-
-Assemble and deploy pipelines are implemented in MethylPipeline only.
-
-## Commit message convention
-
-Link commits to work items (`AB#<id>`). Azure DevOps updates linked items when mention tracking is enabled.
-
-```
-Add ARM64 release pipeline with Universal Package publish (AB#1234)
-
-Implements methyl-extractor-release-ci plan task release-pipelines.
-Parent Epic: DevOps CI/CD release (AB#1200).
-```
-
-## Branch and PR workflow
-
-1. Create or pick a **Task** under the Epic in Azure DevOps Boards.
-2. Branch: `feature/AB1234-me-release-arm64` or `task/1234-universal-publish`.
-3. Reference the plan file in the PR description.
-4. PR title: `Enable Universal Package publish on ARM64 release (AB#1234)`.
-
-## Related docs
-
-- [`../../ci/README.md`](../../ci/README.md) — pipeline registration and ARM64 agent setup
-- MethylPipeline [`docs/deployment/production_release.md`](https://github.com/Goliath-Research/GoliathWorkflow/blob/main/docs/deployment/production_release.md) — full release workflow
+CI behavior is summarized in the repository file `ci/README.md` (one level above `docs/`).

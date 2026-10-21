@@ -1,72 +1,30 @@
 ---
 name: MethylExtractor release CI
-overview: Per-arch GitHub Actions release and PR workflows that build native binaries, package tarballs with the vendored scripts/package_methyl_extractor.sh, and publish GitHub Release assets on git tags.
-azure_devops:
-  type: Task
-  title: Register MethylExtractor release + PR pipelines; enable Universal Package publish per arch
-  work_item_id: null  # set to AB# after creating Task in Azure DevOps Boards
-  parent_epics:
-    - repo: MethylPipeline
-      plan: docs/plans/devops-ci-cd-release.plan.md
-      task_id: me-release-ci
-    - repo: MethylPipeline
-      plan: docs/plans/production-gpu-worker-layout.plan.md
-      task_id: extractor-ci
+overview: GitHub Actions workflows that build the dynamic binary on pull requests and publish per-arch tarballs to GitHub Releases on v* tags.
 todos:
   - id: pr-pipeline
-    content: Add .github/workflows/build.yml (make + smoke on pull requests, no publish)
+    content: .github/workflows/build.yml builds, smokes --help, runs packaging fixtures and Pyrefly
     status: completed
-  - id: release-arm64
-    content: Add .github/workflows/release.yml on pool build-arm64; tag v* and manual releaseVersion param
+  - id: release-tarballs
+    content: .github/workflows/release.yml builds amd64 and aarch64 on Ubuntu 22.04 and uploads GitHub Release assets
     status: completed
-  - id: release-x64
-    content: Add .github/workflows/release.yml on Microsoft-hosted ubuntu-latest; tag v*
-    status: completed
-  - id: universal-publish
-    content: az artifacts universal publish per arch to feed methyl-extractor (SemVer without leading zeros)
-    status: completed
-  - id: multi-repo-checkout
-    content: Vendor scripts/package_methyl_extractor.sh instead of checking out MethylPipeline or GoliathWorkflow
-    status: completed
-  - id: ci-readme
-    content: Document pipeline registration, ARM64 agent pool, and release flow in ci/README.md
+  - id: bundle-libs
+    content: scripts/package_methyl_extractor.sh --bundle-libs plus scripts/bundle_libs.sh
     status: completed
 isProject: false
 ---
 
 # MethylExtractor release CI
 
-## Scope
+Current workflows (release 2026.10.1):
 
-Build and publish **arch-specific tarballs** (`methyl-extractor-linux-aarch64`, `methyl-extractor-linux-amd64`) independently of MethylPipeline wheel releases. Orchestration (assemble + deploy to `/work/goliath`) is owned by MethylPipeline.
+| Workflow | Runner | Trigger | Result |
+|----------|--------|---------|--------|
+| `.github/workflows/build.yml` | `ubuntu-latest` | Push to `main` and pull requests | Packaging fixtures, `make dynamic`, `--help`, Pyrefly, product JSON, MkDocs build |
+| `.github/workflows/release.yml` | `ubuntu-22.04`, `ubuntu-22.04-arm` | Tags `v*`, or a manual `releaseVersion` | `methyl-extractor-linux-{amd64,aarch64}.tar.gz` plus `.sha256` |
 
-## Pipelines
+The release job's smoke matrix unpacks those tarballs in `ubuntu:22.04`, `ubuntu:24.04`, `ubuntu:latest`, and `debian:stable-slim` before `publish` creates or updates the GitHub Release. Publish does not run on pull requests.
 
-| YAML | Workflow | Runner | Trigger |
-|------|----------|--------|---------|
-| `.github/workflows/build.yml` | PR / push build | `ubuntu-latest` | Pull requests and `main` |
-| `.github/workflows/release.yml` | Release (amd64 + aarch64) | `ubuntu-latest` and `ubuntu-24.04-arm` | Tags `v*`, manual |
+Tag form: `v2026.10.1` (no leading zero on the month or patch). A manual dispatch that is not a tag must set `releaseVersion`.
 
-Tag `v2026.6.1` publishes both arch tarballs to the GitHub Release.
-
-## Release flow (cross-repo)
-
-1. Tag MethylExtractor `v2026.6.1` → both release pipelines publish.
-2. Tag MethylPipeline when Python/worker code changes.
-3. Run **GoliathOmics-Release-Assemble** (MethylPipeline) with pinned ME + MP versions.
-4. Approve **GoliathOmics-Release-Deploy** to promote `/work/goliath/current`.
-
-See MethylPipeline [`docs/deployment/production_release.md`](https://github.com/Goliath-Research/GoliathWorkflow/blob/main/docs/deployment/production_release.md).
-
-## Prerequisites
-
-- Artifacts feed **`methyl-extractor`** — build service **Contributor**
-- Packaging script vendored at `scripts/package_methyl_extractor.sh` (no checkout of GoliathWorkflow or GoliathOmics)
-- Self-hosted pool **`build-arm64`** with at least one online agent
-
-Details: [`ci/README.md`](../../ci/README.md).
-
-## Versioning
-
-- Git tags: `v2026.6.1` (no leading zeros in minor, e.g. not `v2026.06.1`)
-- Manual test runs from `main`: set pipeline parameter **`releaseVersion`** (e.g. `2026.6.1-test`)
+Packaging details: [Release packages](../release_packaging.md).
