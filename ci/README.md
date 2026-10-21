@@ -1,24 +1,18 @@
 # MethylExtractor CI
 
-All CI is **GitHub Actions** under [`.github/workflows/`](../.github/workflows/).
+Workflows live in [`.github/workflows/`](../.github/workflows/).
 
-| Workflow | Trigger |
-|----------|---------|
-| [`.github/workflows/build.yml`](../.github/workflows/build.yml) | Push/PR — packaging script fixture, `make dynamic` + `--help` smoke, and Pyrefly on Python sources |
-| [`.github/workflows/release.yml`](../.github/workflows/release.yml) | Tags `v*` (or manual `releaseVersion`) — amd64 + aarch64 tarballs on the GitHub Release |
+| Workflow | Trigger | Jobs |
+|----------|---------|------|
+| [`build.yml`](../.github/workflows/build.yml) | Push to `main` and pull requests | Packaging-script fixtures, `make dynamic` plus `--help`, Pyrefly, [`.goliath/product.json`](../.goliath/product.json) against its schema, `mkdocs build --strict` |
+| [`release.yml`](../.github/workflows/release.yml) | Tags `v*` or a manual `releaseVersion` | amd64 and aarch64 tarballs, smoke in bare container images, GitHub Release upload |
 
-Orchestration (assemble/deploy) lives in [GoliathWorkflow](https://github.com/Goliath-Research/GoliathWorkflow) `.github/workflows/`.
+The docs job builds the MkDocs site and does not deploy it. Release packaging is [docs/release_packaging.md](../docs/release_packaging.md).
 
-Release packaging uses the vendored [`scripts/package_methyl_extractor.sh`](../scripts/package_methyl_extractor.sh) (from GoliathOmics). The release workflow does not check out GoliathWorkflow or GoliathOmics.
+## Release flow in this repository
 
-## Prerequisites
+1. Tag `v2026.10.1` (SemVer, no leading zeros: not `v2026.010.1`).
+2. `release.yml` builds on Ubuntu 22.04 for amd64 and aarch64, bundles non-glibc libraries, and smokes the tarballs.
+3. The `publish` job uploads `methyl-extractor-linux-amd64.tar.gz`, `methyl-extractor-linux-aarch64.tar.gz`, and the matching `.sha256` files to that GitHub Release.
 
-1. Org **Goliath-Research** with Actions enabled; `GITHUB_TOKEN` `contents: write` on the release workflow.
-2. SemVer tags: `v2026.6.1` (not `v2026.06.1`).
-
-## Release flow
-
-1. Tag MethylExtractor `v2026.6.1` → **release** workflow (amd64 + aarch64).
-2. Tag MethylPipeline → GoliathWorkflow **release**.
-3. Run GoliathWorkflow **release-assemble** with both versions pinned.
-4. Approve GoliathWorkflow **release-deploy**.
+`permissions: contents: write` on the release workflow is what allows the upload. Pull-request builds do not publish.

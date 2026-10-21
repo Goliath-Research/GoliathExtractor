@@ -1,316 +1,121 @@
 # MethylExtractor
 
-**GoliathApp** is the platform. **GoliathOmics** is the genomics product. **GoliathAlign** (formerly mojo-align) aligns reads. **MethylExtractor** calls methylation from linear BAM files. **GoliathWeb** is the public hub.
+MethylExtractor extracts cytosine methylation counts from a coordinate-sorted, indexed bisulfite BAM and a reference FASTA. This documentation matches the source at release **2026.10.1** (tag `v2026.10.1`).
 
-Index: [../GoliathApp/docs/workspace-index.md](../GoliathApp/docs/workspace-index.md).
+It is a performance-focused fork of [MethylDackel](https://github.com/dpryan79/MethylDackel) (Devon P. Ryan, MIT). The fork keeps that license. See [Differences from MethylDackel](docs/upstream.md) and [`LICENSE`](LICENSE).
 
-## Place in the workspace
+CpG (`CG`) context is always extracted. `CHG` and `CHH` are off unless you pass `-G` / `--CHG` or `-H` / `--CHH`. The default filters keep reads with MAPQ ≥ 30 and bases with Phred ≥ 20, and they write sites with coverage ≥ 4.
 
-MethylExtractor is an improved, focused fork of [MethylDackel](https://github.com/dpryan79/MethylDackel). It reads linear BAM files after alignment (GoliathAlign or Parabricks) and writes per-chromosome HDF5 plus JSON QC sidecars. [GoliathOmics](https://github.com/Goliath-Research/GoliathOmics) consumes that contract in `methylextractionqc`. It is not used on the WGBS pangenome path; that path calls methylation inside GoliathAlign (`MethylCall` / `MergeCpG`). It is not part of GoliathApp.
+## Install
 
-A high-performance tool for extracting DNA methylation data from bisulfite sequencing BAM files, featuring advanced overlapping read pair handling and comprehensive quality control.
-
-## ✨ Key Features
-
-- **🔬 Advanced Read Processing**: Coordinate-based clipping of overlapping paired-end mates to prevent double-counting
-- **⚡ High Performance**: Multi-threaded processing with deterministic results
-- **📊 Comprehensive Analysis**: CpG, CHG, and CHH methylation contexts with detailed statistics
-- **💾 Flexible Output**: HDF5, text, or combined formats with compression
-- **🚀 Efficient Compression**: Zstd compression with gzip fallback for HDF5 output
-- **🎯 Quality Control**: Rigorous filtering with MAPQ ≥ 30 and Phred ≥ 20 defaults
-
-## Installation
-
-### Prerequisites
-- GCC compiler
-- HTSlib (automatically installed by Makefile)
-- HDF5 library (automatically installed by Makefile)
-- **Zstd** (required for optimized compression)
-
-### Build from Source
-```bash
-git clone <repository-url>
-cd MethylExtractor
-make deps   # one-time: install system dependencies (Debian/Ubuntu, uses sudo)
-make        # compile the optimized binary
-```
-
-`make deps` installs the required system packages (on Debian/Ubuntu); it is architecture-agnostic (apt installs for the native arch). It is a separate, explicit step so that a plain `make` never runs `sudo` on its own. `make` compiles the binary into `build/dynamic/<arch>/MethylExtractor`, where `<arch>` is auto-detected (`x64` on x86_64, `arm64` on aarch64).
-
-The **HDF5 Zstd plugin** enables Zstd-compressed HDF5 output. Build it into the arch-correct project tree (`build/dynamic/<arch>/hdf5_zstd_plugin/`) with:
+Debian or Ubuntu, from a clone of this repository:
 
 ```bash
-make plugin   # builds libH5Zzstd.so for this machine's architecture
+make deps    # apt packages, including htslib, HDF5, and zstd (uses sudo)
+make         # build/dynamic/<arch>/MethylExtractor
+make plugin  # optional Zstd HDF5 filter (libH5Zzstd.so)
 ```
 
-`make plugin` prints the `HDF5_PLUGIN_PATH` to export if you want Zstd without a system install. The plugin is **not** copied to the system until you run `make install`. Without the plugin on `HDF5_PLUGIN_PATH`, HDF5 output falls back to gzip automatically.
+`<arch>` is `x64` on x86_64 and `arm64` on aarch64. `make` does not run `sudo`. `make install` copies the binary to `/usr/local/bin/MethylExtractor` and the plugin to `/usr/local/hdf5/lib/plugin`, and it appends `HDF5_PLUGIN_PATH` to `~/.bashrc` when that line is absent. It refuses to install a binary or plugin built for another machine.
 
-### System install (optional)
-```bash
-make install
-```
-
-This copies the MethylExtractor binary to `/usr/local/bin/`, the HDF5 Zstd plugin to `/usr/local/hdf5/lib/plugin`, and appends `HDF5_PLUGIN_PATH` to your `~/.bashrc`. Before copying anything, **architecture is checked**: the binary and plugin must match the current machine (e.g. you cannot install an arm64 build on an x86_64 host). If there is a mismatch, `make install` aborts with an error—run `make` on the target machine first.
-
-### Prebuilt release tarball
-GitHub Releases ship `methyl-extractor-linux-{amd64,aarch64}.tar.gz` (+ `.sha256`). They are dynamically linked but self-contained: built on Ubuntu 22.04 with every non-glibc library (htslib, HDF5, curl, ...) bundled in `lib/` and found via RPATH, so they run on bare Ubuntu 22.04+/Debian with no extra packages.
-
-```bash
-mkdir -p ~/methyl-extractor && tar -xzf methyl-extractor-linux-amd64.tar.gz -C ~/methyl-extractor
-. ~/methyl-extractor/env.sh   # PATH, HDF5_PLUGIN_PATH (Zstd plugin), LD_LIBRARY_PATH fallback
-MethylExtractor --help
-```
-
-See [docs/release_packaging.md](docs/release_packaging.md) for how the bundle is built and tested.
+GitHub Release tag `v2026.10.1` publishes `methyl-extractor-linux-amd64.tar.gz` and `methyl-extractor-linux-aarch64.tar.gz` (each with a `.sha256`). The tarballs are dynamically linked and carry their non-glibc libraries under `lib/`. Details: [Install](docs/install.md), [Release packages](docs/release_packaging.md).
 
 ## Usage
 
-### Basic Syntax
 ```bash
-build/dynamic/x64/MethylExtractor [options] <input.bam> [output_directory] [reference.fa]
-```
-*(Note: Binary is located in `build/dynamic/x64/MethylExtractor` or similar, depending on architecture.)*
-
-The output directory may be given positionally (2nd argument) or via `-o/--output-dir`; one of the two is required. The reference is optional and, if provided, overrides the one in `chrom_mapping.json`.
-
-### Command-Line Options
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `-h, --help` | Show help message and exit | N/A |
-| `-t, --threads INT` | Number of worker threads | auto (CPU count) |
-| `-q, --min-mapq INT` | Minimum mapping quality (MAPQ) | 30 |
-| `-p, --min-phred INT` | Minimum base quality (Phred score) | 20 |
-| `-c, --min-cov INT` | Minimum coverage threshold | 4 |
-| `-C, --cap-cov INT` | Cap coverage to this value (0 = disabled) | 0 |
-| `-G, --CHG` | Include CHG methylation contexts | Disabled |
-| `-H, --CHH` | Include CHH methylation contexts | Disabled |
-| `-m, --chrom-mapping FILE` | Chromosome mapping configuration file | `chrom_mapping.json` |
-| `-z, --compression INT` | Compression level (0=none, 1-19=Zstd, gzip fallback) | 6 |
-| `-k, --chunk-size INT` | HDF5 chunk size for I/O optimization | 1,000,000 |
-| `-f, --output-format STR` | Output format: `hdf5`, `txt`, or `both` | `hdf5` |
-| `-s, --split` | Split output by methylation context | Disabled |
-| `-o, --output-dir DIR` | Output directory | N/A |
-| `-R, --read-level` | Emit read-level pattern sidecars (`{chrom}-{ctx}.patterns.h5`) | Disabled |
-| `-T, --tile-size INT` | Consecutive CpG sites per read-level tile (2–8) | 4 |
-
-### Compression
-
-HDF5 output is compressed in-place with the Zstd HDF5 filter when it is available
-(see `make install`, which sets up `HDF5_PLUGIN_PATH`). If the Zstd filter is not
-available at runtime, MethylExtractor falls back to gzip/deflate automatically.
-
-```bash
-build/dynamic/x64/MethylExtractor input.bam output_dir -z 9 -t 32
+build/dynamic/x64/MethylExtractor [options] <input.bam> [output_dir] [ref.fa]
 ```
 
-- `-z 0` disables compression (fastest write, largest files).
-- `-z 1-19` selects the Zstd level (higher = smaller, slower). With the gzip
-  fallback the level is capped at 9.
-- Output files remain valid, self-describing HDF5 in all cases.
+The BAM must be coordinate-sorted and indexed. The output directory is the second positional argument or `-o` / `--output-dir` (one of the two is required; the directory is created). The reference FASTA is the optional third positional. It overrides `reference` in the chromosome map. One of those two must name an indexed FASTA.
 
-### Chromosome Mapping File
-
-When processing specific chromosomes, create a `chrom_mapping.json` file:
+Chromosome names come from `chrom_mapping.json` next to the BAM, or from `-m` / `--chrom-mapping`. Only entries with `"extract": true` are processed. `fasta` is the reference contig, `bam` is the BAM contig, and `name` is the output file stem.
 
 ```json
 {
   "reference": "/path/to/genome.fa",
   "chromosomes": [
-    {
-      "name": "chr1",
-      "fasta": "chr1",
-      "bam": "chr1",
-      "extract": true
-    }
+    {"name": "1", "fasta": "chr1", "bam": "chr1", "extract": true}
   ]
 }
 ```
 
-## Output Formats
+### Options
 
-### HDF5 Format (Default)
-Efficient binary format with compression:
-```
-Dataset: methylation_data
-├── pos (uint32) - Genomic position (1-based)
-├── mC (uint16) - Methylated cytosine count
-├── uC (uint16) - Unmethylated cytosine count
-└── tnc (uint8) - Trinucleotide context and strand
-```
+Defaults are the constants in `include/methyl_extractor.h` and the parser in `src/main.c`.
 
-### Text Format
-Human-readable tab-separated values:
+| Option | Default | Effect |
+|--------|---------|--------|
+| `-h`, `--help` | | Print usage and exit 0 |
+| `-t`, `--threads INT` | CPU count (`16` if that count cannot be read) | Region-worker budget. Split across in-flight chromosomes |
+| `-q`, `--min-mapq INT` | `30` | Drop reads with MAPQ lower than this |
+| `-p`, `--min-phred INT` | `20` | Skip bases with Phred lower than this |
+| `-c`, `--min-cov INT` | `4` | Omit sites with `mC + uC` below this from output files |
+| `-C`, `--cap-cov INT` | `0` | `0` keeps raw counts. Any positive value rescales sites above the mean coverage of sites that pass `--min-cov` down to that mean. The integer is recorded in the JSON and is not the ceiling |
+| `-G`, `--CHG` | off | Also extract CHG |
+| `-H`, `--CHH` | off | Also extract CHH |
+| `-m`, `--chrom-mapping FILE` | `<bam_dir>/chrom_mapping.json` | Contig map |
+| `-z`, `--compression INT` | `6` | `0` = uncompressed HDF5. `1`–`19` = Zstd level when filter `32015` is loaded, otherwise gzip capped at 9 |
+| `-k`, `--chunk-size INT` | `1000000` | HDF5 chunk length for `methylation_data` |
+| `-f`, `--output-format STR` | `hdf5` | `hdf5`, `txt`, or `both` |
+| `-s`, `--split` | off | One file per context (`{name}-CG`, `{name}-CHG`, `{name}-CHH`) |
+| `-o`, `--output-dir DIR` | required if omitted positionally | Output directory |
+| `-R`, `--read-level` | off | Write `{name}-{ctx}.patterns.h5` |
+| `--mhap` | off | Write `{name}-CG.mhap.h5` (long option only) |
+| `-T`, `--tile-size INT` | `4` | Consecutive sites per read-level tile (`2`–`8`) |
+| `--chrom-parallel INT` | `2` | Maximum chromosomes in flight. Dropped to `1` when the two largest chromosomes exceed `--max-rss-gb` |
+| `--max-rss-gb INT` | `32` | RSS gate for chromosome parallelism |
+
 ```bash
-# position strand methylated_count unmethylated_count context trinucleotide
-161	+	11	9	CG	CGT
-310	-	8	12	CG	CGA
+MethylExtractor \
+  -t 16 -q 30 -p 20 -c 4 -G -H -s -f hdf5 -z 6 \
+  -m chrom_mapping.json -o results \
+  sample.bam reference.fa
 ```
 
-### Output Files
+Full calling rules, overlap clipping, and file names: [Command line](docs/cli.md).
 
-| Format Option | Files Generated | Description |
-|---------------|-----------------|-------------|
-| `-f hdf5` | `chr1.h5`, `chr2.h5`, ... | Per-chromosome HDF5 files |
-| `-f txt` | `chr1.txt`, `chr2.txt`, ... | Per-chromosome text files |
-| `-f both` | Both HDF5 and text files | Combined output |
-| `-s --split` | `chr1-CG.h5`, `chr1-CHG.h5`, ... | Separate files per context |
-| `-R --read-level` | `chr1-CG.patterns.h5`, ... | Read-level co-methylation pattern sidecars (requires `-s`) |
+## Output
 
-Read-level sidecars follow the GoliathOmics read-level pattern contract: per-tile sparse histograms of joint methylation patterns over `k` consecutive CpGs (`bitmask_msb_first` encoding). Marginal `{chrom}-{ctx}.h5` files are unchanged.
+With `--split`, each kept context is `{output_dir}/{name}-{ctx}.h5` (or `.txt` when `-f txt`). Without `--split`, contexts share `{output_dir}/{name}.h5` and the sidecar context is `ALL`. `-f both` writes the HDF5 file and a sibling `.txt`.
 
-### Statistics Output
+HDF5 (default) is a one-dimensional compound dataset named `methylation_data`:
 
-Each output file (`{chrom}-{context}.h5` or `{chrom}.h5`) gets a companion JSON sidecar with legacy top-level fields plus an extended QC block for GoliathOmics **extraction QC** (`sample.extraction_qc` / `methylextractionqc`) — not alignment QC.
+| Field | HDF5 type | Meaning |
+|-------|-----------|---------|
+| `pos` | uint32 | 1-based reference position |
+| `mC` | uint16 | Methylated cytosine count |
+| `uC` | uint16 | Unmethylated cytosine count |
+| `tnc` | uint8 | Trinucleotide code, context, and strand |
 
-**Legacy fields** (unchanged for backward compatibility):
+When `-z` is greater than 0 and `H5Zfilter_avail(32015)` succeeds, the dataset uses the Zstd filter (id **32015**). Otherwise the writer uses gzip/deflate at `min(level, 9)`, or uncompressed data if deflate cannot be set. Startup logs whether `HDF5_PLUGIN_PATH` can see the plugin built by `make plugin`.
 
-```json
-{
-  "num_positions": 1345382,
-  "total_methylated": 5084976,
-  "total_unmethylated": 18665653,
-  "avg_methylation_level": 0.214,
-  "avg_coverage": 17.65
-}
-```
+Every file that `flush_buffer` actually writes gets a JSON sidecar (`1-CG.h5` → `1-CG.json`) with the legacy totals plus `methylextractor.context_qc` version `1.0.0`. After the run, the output directory receives `{sample_id}.extraction_manifest.json` and `{sample_id}.timing.json`. `sample_id` is the output directory's final path component, with the suffix after the last `.` removed. Pass the directory without a trailing slash. MethylExtractor records metrics and does not assign pass or fail.
 
-**Extended context QC** (`schema_name`: `methylextractor.context_qc`) adds:
+`-R` adds `{name}-{ctx}.patterns.h5` (CG always; CHG/CHH only when `--split` is also set). `--mhap` adds `{name}-CG.mhap.h5`.
 
-- `metadata` — chromosome, context, filters (`min_mapq`, `min_phred`, `min_cov`, `cap_cov`)
-- `sites` — `sites_in_reference`, `sites_passing_min_cov`, `fraction_sites_covered`
-- `coverage` — mean/median/p10/p90 on all reference sites
-- `methylation` — global level and `by_strand` (+/−)
-- `read_filtering` — per-chromosome read drop counts and retention rate
+Field-level layouts: [Output](docs/output.md). QC JSON: [Extraction QC](docs/extraction_qc_contract.md).
 
-### Extraction manifest (sample-level)
+## Performance
 
-After all chromosomes complete, MethylExtractor writes `{sample_id}.extraction_manifest.json` in the output directory (`schema_name`: `methylextractor.extraction_manifest`). GoliathOmics (`methylextractionqc`) consumes this file and the per-context JSON sidecars to run post-extraction guardrails. Pass/Fail is not computed in MethylExtractor.
+`-t` is a region-worker budget inside each chromosome. `--chrom-parallel` runs more than one chromosome at a time, largest first, while `--max-rss-gb` keeps the estimated resident set of in-flight chromosomes under the gate. `{sample_id}.timing.json` splits wall time into BAM scan and HDF5 write. HDF5 and JSON writes take one process-wide lock. Notes: [Performance](docs/performance.md).
 
-The manifest contains:
+## Development checks
 
-- `metadata` — sample ID, BAM path, reference, contexts extracted (CG always; CHG/CHH when `-G`/`-H` used), filter parameters
-- `summary` — genome-wide weighted CpG coverage/methylation, CHG/CHH methylation when applicable, `cpg_fraction_sites_covered`
-- `read_filtering` — aggregated read filter stats across chromosomes
-- `per_chromosome` — per-context stats and read filtering for each chromosome
-
-Example path: `/work/samples/1401-042825-50082/1401-042825-50082.extraction_manifest.json`
-
-## Examples
-
-### Basic Usage
-```bash
-# Process entire BAM file with defaults
-./MethylExtractor input.bam output_dir reference.fa
-```
-
-### High-Quality Analysis
-```bash
-# Strict quality control, all contexts, both formats
-./MethylExtractor \
-    -t 16 \
-    -q 30 \
-    -p 20 \
-    -c 4 \
-    -G \
-    -H \
-    -f both \
-    -s \
-    input.bam \
-    output_dir \
-    reference.fa
-```
-
-### Production Pipeline
-```bash
-# Optimized for large-scale analysis
-./MethylExtractor \
-    --threads 32 \
-    --min-mapq 30 \
-    --min-phred 20 \
-    --min-cov 5 \
-    --cap-cov 100 \
-    --CHG \
-    --CHH \
-    --read-level \
-    --tile-size 4 \
-    --output-format hdf5 \
-    --compression 9 \
-    sample.bam \
-    results/
-```
-
-### Custom Chromosome Selection
-```bash
-# Process specific chromosomes only
-./MethylExtractor \
-    -m custom_chromosomes.json \
-    -t 8 \
-    input.bam \
-    output_dir
-```
-
-## Quality Control Features
-
-MethylExtractor implements rigorous quality control:
-
-- **Read-level filtering**: MAPQ ≥ 30, removes duplicates, secondary alignments, and multimappers
-- **Base-level filtering**: Phred ≥ 20 quality scores
-- **Bisulfite validation**: Ensures reads match expected conversion patterns
-- **Overlapping read handling**: Coordinate-based mate clipping prevents double-counting in paired-end data (the left mate yields the overlap to the right mate so each reference position is counted once)
-- **Coverage normalization**: Optional capping for PCR bias correction
-
-## Performance Guidelines
-
-### Threading
-- **Small datasets (< 10GB)**: 4-8 threads
-- **Medium datasets (10-50GB)**: 8-16 threads
-- **Large datasets (> 50GB)**: 16-32 threads
-
-### Memory Usage
-- Streaming I/O prevents loading entire BAM files
-- Memory scales with in-flight chromosome size (`--chrom-parallel`, gated by `--max-rss-gb`)
-- HDF5 chunked storage optimizes I/O performance
-
-`--chrom-parallel` runs more than one chromosome at a time. `--threads` is the total region-worker budget split across those chromosomes. `{sample}.timing.json` reports BAM-scan vs HDF5-write elapsed ms.
-
-## Dependencies
-
-- **HTSlib**: BAM/SAM file processing
-- **HDF5**: Binary data storage and compression
-- **Zlib/Bzip2/LZMA**: Compression libraries
-- **GCC**: Compiler with OpenMP support
-- **Zstd**: High-performance compression with fallback to gzip
-
-## Troubleshooting
-
-### Common Issues
-- **Empty output**: Check chromosome mapping and BAM headers
-- **High memory usage**: Reduce `--chrom-parallel` or `--threads`, or lower `--max-rss-gb` so the extractor serializes large chromosomes
-- **Slow processing**: Use SSD storage, increase `--threads`, raise `--chrom-parallel` if RAM allows, and adjust chunk sizes. Lower the `-z` level (or use `-z 0`) to trade compression ratio for write speed. Check `{sample}.timing.json` to see whether wall time is BAM-bound or write-bound.
-- **Low methylation**: Verify bisulfite conversion and quality filters
-
-### Performance Optimization
-- Use SSD storage for input/output
-- Adjust `--chunk-size` based on chromosome sizes
-- Balance `--compression` level with I/O performance needs
-
-## Documentation
-
-For complete documentation, see `MethylExtractor_Documentation.html`.
-
-## Type checking
-
-Python in `src/cap_coverage.py` and `tests/` is checked with [Pyrefly](https://pyrefly.org):
+Python under `src/cap_coverage.py` and `tests/` is type-checked with Pyrefly. That module is a pandas helper; the binary does not call it.
 
 ```bash
 poetry install
 poetry run pyrefly check
+# or: make typecheck
 ```
 
-`make typecheck` runs the same check.
+Optional HTML docs (not published by CI):
+
+```bash
+pip install mkdocs-material
+mkdocs serve
+```
 
 ## License
 
-**MIT.** MethylExtractor is a fork of [MethylDackel](https://github.com/dpryan79/MethylDackel)
-(MIT; Devon P. Ryan). See [`LICENSE`](LICENSE).
+MIT. Copyright (c) 2015 Devon P. Ryan and the MethylExtractor contributors. Copies must keep the copyright and permission notice in [`LICENSE`](LICENSE). Vendored cJSON remains Copyright (c) 2009-2017 Dave Gamble and cJSON contributors. HTSlib, HDF5, and Zstd keep their own licenses.
