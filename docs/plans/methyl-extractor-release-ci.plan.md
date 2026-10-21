@@ -20,7 +20,8 @@ Current workflows (release 2026.10.1):
 
 | Workflow | Runner | Trigger | Result |
 |----------|--------|---------|--------|
-| `.github/workflows/build.yml` | `ubuntu-latest` | Push to `main` and pull requests | Packaging fixtures, `make dynamic`, `--help`, Pyrefly, product JSON, MkDocs build |
+| `.github/workflows/build.yml` | `ubuntu-latest` | Push to `main` and pull requests | Packaging fixtures, `make dynamic`, `--help`, Pyrefly, product JSON, MkDocs build (no deploy) |
+| `.github/workflows/pages.yml` | `ubuntu-latest` | Push to `main`, or manual dispatch | MkDocs build and GitHub Pages deploy |
 | `.github/workflows/release.yml` | `ubuntu-22.04`, `ubuntu-22.04-arm` | Tags `v*`, or a manual `releaseVersion` | `methyl-extractor-linux-{amd64,aarch64}.tar.gz` plus `.sha256` |
 
 The release job's smoke matrix unpacks those tarballs in `ubuntu:22.04`, `ubuntu:24.04`, `ubuntu:latest`, and `debian:stable-slim` before `publish` creates or updates the GitHub Release. Publish does not run on pull requests.

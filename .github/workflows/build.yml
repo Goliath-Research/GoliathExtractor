@@ -119,7 +119,7 @@ jobs:
       - name: Build MkDocs site
         run: |
           set -euo pipefail
-          python -m pip install --disable-pip-version-check 'mkdocs-material>=9.5,<10'
+          python -m pip install --disable-pip-version-check --require-hashes --only-binary=:all: -r requirements/mkdocs.txt
           mkdocs build --strict
           if grep -RInE 'Goliath(App|Omics)' README.md docs ci/README.md .goliath/product.json; then
             echo "README, docs, and product.json must not mention GoliathApp or GoliathOmics"

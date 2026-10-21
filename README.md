@@ -109,7 +109,7 @@ poetry run pyrefly check
 # or: make typecheck
 ```
 
-Optional HTML docs (not published by CI):
+HTML docs are published at [goliath-research.github.io/MethylExtractor](https://goliath-research.github.io/MethylExtractor/). Preview locally:
 
 ```bash
 pip install mkdocs-material
