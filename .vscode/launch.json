@@ -23,7 +23,7 @@
       "stopAtEntry": false,
       "externalConsole": false,
       "cwd": "/home/ubuntu/MethylExtractor/build/debug/arm64",
-      "program": "/home/ubuntu/MethylExtractor/build/debug/arm64/MethylExtractor",
+      "program": "/home/ubuntu/MethylExtractor/build/debug/arm64/goliath-extractor",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
