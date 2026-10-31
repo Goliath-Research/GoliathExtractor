@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "goliath-extractor",
+  "id": "goliathextractor",
   "name": "GoliathExtractor",
   "tagline": "Methylation counts from bisulfite BAM files, written as per-chromosome HDF5.",
   "description": "GoliathExtractor reads a coordinate-sorted, indexed bisulfite BAM and a reference FASTA and writes per-chromosome cytosine counts. CG context is extracted by default; CHG and CHH are optional flags. Each chromosome file stores an HDF5 compound dataset named methylation_data (pos, mC, uC, tnc), preferably with the Zstd filter 32015, plus a JSON sidecar. It is a performance-focused fork of MethylDackel and remains under the MIT license.",

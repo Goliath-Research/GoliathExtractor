@@ -94,8 +94,8 @@ jobs:
               if banned in text:
                   raise SystemExit(f"{path} must not mention {banned}")
           data = json.loads(text)
-          if data.get("id") != "goliath-extractor":
-              raise SystemExit("id must be goliath-extractor")
+          if data.get("id") != "goliathextractor":
+              raise SystemExit("id must be goliathextractor")
           depends = data.get("dependsOn", [])
           if not isinstance(depends, list):
               raise SystemExit("dependsOn must be an array of product ids when present")
