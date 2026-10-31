@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/Goliath-Research/MethylExtractor/blob/main/.goliath/product.schema.json",
+  "$id": "https://github.com/Goliath-Research/GoliathExtractor/blob/main/.goliath/product.schema.json",
   "title": "Product summary",
   "description": "Machine-readable product summary for the GoliathWeb site (Goliath Research Inc.). dependsOn is an optional array of upstream product ids.",
   "type": "object",
@@ -43,7 +43,7 @@
       "minLength": 1
     },
     "category": {
-      "description": "Catalog category. MethylExtractor is a component.",
+      "description": "Catalog category. GoliathExtractor is a component.",
       "type": "string",
       "minLength": 1
     },

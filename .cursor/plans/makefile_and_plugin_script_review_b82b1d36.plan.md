@@ -1,6 +1,6 @@
 ---
 name: Makefile and plugin script review
-overview: "HDF5 Zstd plugin is built under build/dynamic/<arch>/hdf5_zstd_plugin (with MethylExtractor); copy and HDF5_PLUGIN_PATH only on make install; arch check at install."
+overview: "HDF5 Zstd plugin is built under build/dynamic/<arch>/hdf5_zstd_plugin (with GoliathExtractor); copy and HDF5_PLUGIN_PATH only on make install; arch check at install."
 todos:
   - id: fix-script-so-name
     content: "Fix install_hdf5_zstd_plugin.sh – use libH5Zzstd.so everywhere; add build-only mode (path arg = build dir only, no install/.bashrc); no-args = current behavior."
@@ -24,14 +24,14 @@ isProject: false
 
 ## Relationship
 
-- **Makefile**: Builds MethylExtractor and the HDF5 Zstd plugin (plugin built into the project’s build tree). `make install` copies the binary and the plugin .so to the system and configures `.bashrc`.
-- **Plugin**: [HDF5 Zstandard filter](https://github.com/aparamon/HDF5Plugin-Zstandard). MethylExtractor uses it at runtime ([src/output_formats.c](src/output_formats.c): `H5Pset_filter(..., ZSTD_FILTER, ...)` with gzip fallback if the filter is not found).
+- **Makefile**: Builds GoliathExtractor and the HDF5 Zstd plugin (plugin built into the project’s build tree). `make install` copies the binary and the plugin .so to the system and configures `.bashrc`.
+- **Plugin**: [HDF5 Zstandard filter](https://github.com/aparamon/HDF5Plugin-Zstandard). GoliathExtractor uses it at runtime ([src/output_formats.c](src/output_formats.c): `H5Pset_filter(..., ZSTD_FILTER, ...)` with gzip fallback if the filter is not found).
 
 ---
 
 ## Plugin build layout (implemented)
 
-Build the plugin **under the dynamic build dir, per architecture**: `HDF5_PLUGIN_BUILD = $(DYNAMIC_DIR)/hdf5_zstd_plugin` → `build/dynamic/$(ARCH_NAME)/hdf5_zstd_plugin/`, so it sits **alongside** the MethylExtractor binary (`build/dynamic/<arch>/MethylExtractor` and `build/dynamic/<arch>/hdf5_zstd_plugin/libH5Zzstd.so`). Copy to `/usr/local/hdf5/lib/plugin` only when the user runs **`make install`**. At install time, **verify** that the binary and plugin match the current machine’s architecture. No installation to the system during `make` or `make deps`.
+Build the plugin **under the dynamic build dir, per architecture**: `HDF5_PLUGIN_BUILD = $(DYNAMIC_DIR)/hdf5_zstd_plugin` → `build/dynamic/$(ARCH_NAME)/hdf5_zstd_plugin/`, so it sits **alongside** the GoliathExtractor binary (`build/dynamic/<arch>/goliath-extractor` and `build/dynamic/<arch>/hdf5_zstd_plugin/libH5Zzstd.so`). Copy to `/usr/local/hdf5/lib/plugin` only when the user runs **`make install`**. At install time, **verify** that the binary and plugin match the current machine’s architecture. No installation to the system during `make` or `make deps`.
 
 - **Benefits**: All dynamic artifacts for an arch in one place; plugin is just another build artifact until install; `make install` is the only place that touches system paths and `.bashrc`; `make clean` (rm -rf build) removes everything. **Make** does not re-run the plugin recipe when `libH5Zzstd.so` already exists (target has no prerequisites).
 
@@ -50,7 +50,7 @@ Build the plugin **under the dynamic build dir, per architecture**: `HDF5_PLUGIN
 - `install` depends on `dynamic` and `$(PLUGIN_SO)`.
 
 **install**  
-- **Architecture check (required)**: Before copying anything, verify that the built binary and plugin match the current machine. Use `file $(DYNAMIC_DIR)/MethylExtractor` and `file $(HDF5_PLUGIN_BUILD)/libH5Zzstd.so` and require that they report the expected arch (e.g. output contains `aarch64` when `$(ARCH)` is `aarch64`, or `x86-64` when `$(ARCH)` is `x86_64`). If there is a mismatch, abort with a clear error (e.g. "Architecture mismatch: binary/plugin were built for X but this machine is Y. Run make on this machine first.") so you never copy an arm64 binary/plugin onto an x86_64 host or the reverse.
+- **Architecture check (required)**: Before copying anything, verify that the built binary and plugin match the current machine. Use `file $(DYNAMIC_DIR)/GoliathExtractor` and `file $(HDF5_PLUGIN_BUILD)/libH5Zzstd.so` and require that they report the expected arch (e.g. output contains `aarch64` when `$(ARCH)` is `aarch64`, or `x86-64` when `$(ARCH)` is `x86_64`). If there is a mismatch, abort with a clear error (e.g. "Architecture mismatch: binary/plugin were built for X but this machine is Y. Run make on this machine first.") so you never copy an arm64 binary/plugin onto an x86_64 host or the reverse.
 - Copy the binary to `/usr/local/bin/` and chmod (unchanged).
 - Create `/usr/local/hdf5/lib/plugin` and copy `$(HDF5_PLUGIN_BUILD)/libH5Zzstd.so` there (e.g. `sudo cp ...`).
 - Append `export HDF5_PLUGIN_PATH=/usr/local/hdf5/lib/plugin` to the installing user’s `~/.bashrc` if not already present (use `$$HOME`).

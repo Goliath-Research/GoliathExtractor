@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Batch-process every BAM under BASE_DIR with MethylExtractor.
+# Batch-process every BAM under BASE_DIR with GoliathExtractor.
 # Output for each sample is written next to its BAM file.
 
 set -euo pipefail
@@ -14,8 +14,8 @@ CHROM_MAPPING="/work/chrom_mapping.json"
 # Base directory containing BAM files
 BASE_DIR="/work/samples"
 
-# MethylExtractor binary (built with `make`)
-METHYL_EXTRACTOR="/home/ubuntu/MethylExtractor/build/dynamic/arm64/MethylExtractor"
+# GoliathExtractor binary (built with `make`)
+METHYL_EXTRACTOR="/home/ubuntu/MethylExtractor/build/dynamic/arm64/goliath-extractor"
 
 # Find all BAM files
 find "$BASE_DIR" -name "*.bam" | while read -r bam_file; do
@@ -27,7 +27,7 @@ find "$BASE_DIR" -name "*.bam" | while read -r bam_file; do
     # Output directory (per sample)
     output_dir="$sample_dir"
 
-    # CLI: MethylExtractor [options] <input.bam> [output_dir] [ref.fa]
+    # CLI: goliath-extractor [options] <input.bam> [output_dir] [ref.fa]
     "$METHYL_EXTRACTOR" \
         --chrom-mapping "$CHROM_MAPPING" \
         --threads 16 \

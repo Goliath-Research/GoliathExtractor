@@ -1,4 +1,4 @@
-#include "methyl_extractor.h"
+#include "goliath_extractor.h"
 
 static void utc_timestamp(char *buf, size_t buflen)
 {

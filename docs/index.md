@@ -1,8 +1,8 @@
-# MethylExtractor
+# GoliathExtractor
 
-MethylExtractor extracts cytosine methylation counts from a coordinate-sorted, indexed bisulfite BAM and a reference FASTA. These pages describe the C program built from this repository at release **2026.10.1** (`v2026.10.1`).
+GoliathExtractor extracts cytosine methylation counts from a coordinate-sorted, indexed bisulfite BAM and a reference FASTA. These pages describe the C program built from this repository at release **2026.10.1** (`v2026.10.1`).
 
-The program is a fork of [MethylDackel](https://github.com/dpryan79/MethylDackel), written by Devon P. Ryan and distributed under the MIT license. MethylExtractor keeps that license and the upstream copyright. What this tree adds, and what it does not carry over, is listed in [MethylDackel](upstream.md).
+The program is a fork of [MethylDackel](https://github.com/dpryan79/MethylDackel), written by Devon P. Ryan and distributed under the MIT license. GoliathExtractor keeps that license and the upstream copyright. What this tree adds, and what it does not carry over, is listed in [MethylDackel](upstream.md).
 
 ## What a run does
 

@@ -1,4 +1,4 @@
-#include "methyl_extractor.h"
+#include "goliath_extractor.h"
 
 static int site_matches_context(const char *chr_seq, uint32_t chr_len, int pos,
                                 int context, int *canonical_pos)

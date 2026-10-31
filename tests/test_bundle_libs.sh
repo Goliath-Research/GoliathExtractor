@@ -1,5 +1,5 @@
 #!/bin/bash
-# Fixture test for scripts/bundle_libs.sh: builds a fake MethylExtractor
+# Fixture test for scripts/bundle_libs.sh: builds a fake GoliathExtractor
 # that links a private shared library (libfoo.so.1 -> libfoo.so.1.2.3) plus a
 # fake HDF5 plugin, bundles it, then runs it with the build dir gone.
 # Needs gcc + patchelf + ldd; skips (exit 0) when they are missing.
@@ -34,11 +34,11 @@ C
 gcc -shared -fPIC -Wl,-soname,libfoo.so.1 -o "$TMP/build/libfoo.so.1.2.3" "$TMP/build/foo.c"
 ln -s libfoo.so.1.2.3 "$TMP/build/libfoo.so.1"
 ln -s libfoo.so.1 "$TMP/build/libfoo.so"
-gcc -o "$TMP/tree/bin/MethylExtractor" "$TMP/build/main.c" -L"$TMP/build" -lfoo -lm
+gcc -o "$TMP/tree/bin/goliath-extractor" "$TMP/build/main.c" -L"$TMP/build" -lfoo -lm
 gcc -shared -fPIC -o "$TMP/tree/lib/hdf5_zstd_plugin/libH5Zzstd.so" "$TMP/build/plugin.c" -L"$TMP/build" -lfoo
 
 # Unbundled: the binary cannot run without the build dir on the path.
-if "$TMP/tree/bin/MethylExtractor" >/dev/null 2>&1; then fail "fixture should not run unbundled"; fi
+if "$TMP/tree/bin/goliath-extractor" >/dev/null 2>&1; then fail "fixture should not run unbundled"; fi
 
 LD_LIBRARY_PATH="$TMP/build" bash "$SCRIPT" "$TMP/tree" 2>"$TMP/log" || { cat "$TMP/log"; fail "bundle failed"; }
 rm -rf "$TMP/build"
@@ -49,7 +49,7 @@ for x in libc.so libm.so ld-linux; do
   for f in "$TMP/tree/lib/$x"*; do [[ -e "$f" ]] && fail "$x must not be bundled"; done
 done
 # shellcheck disable=SC2016
-[[ "$(patchelf --print-rpath "$TMP/tree/bin/MethylExtractor")" == '$ORIGIN/../lib' ]] || fail "binary rpath"
+[[ "$(patchelf --print-rpath "$TMP/tree/bin/goliath-extractor")" == '$ORIGIN/../lib' ]] || fail "binary rpath"
 # shellcheck disable=SC2016
 [[ "$(patchelf --print-rpath "$TMP/tree/lib/libfoo.so.1.2.3")" == '$ORIGIN' ]] || fail "lib rpath"
 # shellcheck disable=SC2016
@@ -58,7 +58,7 @@ if env -u LD_LIBRARY_PATH ldd "$TMP/tree/lib/hdf5_zstd_plugin/libH5Zzstd.so" | g
 
 # Relocate the tree: RPATH is $ORIGIN-relative.
 mv "$TMP/tree" "$TMP/moved"
-[[ "$(env -u LD_LIBRARY_PATH "$TMP/moved/bin/MethylExtractor")" == "foo=42 4" ]] || fail "bundled binary did not run"
+[[ "$(env -u LD_LIBRARY_PATH "$TMP/moved/bin/goliath-extractor")" == "foo=42 4" ]] || fail "bundled binary did not run"
 
 # Idempotent.
 before="$(cd "$TMP/moved" && find . | sort)"

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Bundle every non-glibc shared library needed by a MethylExtractor install
+# Bundle every non-glibc shared library needed by a GoliathExtractor install
 # tree into <root>/lib and point RPATHs at it, so the tarball runs on hosts
 # without htslib/HDF5/curl/etc. installed. Dynamic linking is kept on purpose
 # (static builds broke on newer platforms); only the glibc family and the
@@ -7,7 +7,7 @@
 # (ubuntu:22.04) to keep the glibc baseline low.
 #
 # Usage: scripts/bundle_libs.sh [--no-patchelf] ROOT
-#   ROOT/bin/MethylExtractor                    -> RPATH $ORIGIN/../lib
+#   ROOT/bin/goliath-extractor                    -> RPATH $ORIGIN/../lib
 #   ROOT/lib/*.so*  (bundled)                   -> RPATH $ORIGIN
 #   ROOT/lib/hdf5_zstd_plugin/*.so (if present) -> RPATH $ORIGIN/..
 #
@@ -26,7 +26,7 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then sed -n '2,17p' "$0"; exi
 ROOT="${1:-}"
 [[ -n "$ROOT" && -d "$ROOT" ]] || die "usage: $0 [--no-patchelf] ROOT"
 ROOT="$(cd "$ROOT" && pwd -P)"
-BIN="$ROOT/bin/MethylExtractor"
+BIN="$ROOT/bin/goliath-extractor"
 LIB="$ROOT/lib"
 PLUGIN_DIR="$LIB/hdf5_zstd_plugin"
 [[ -f "$BIN" ]] || die "missing $BIN"

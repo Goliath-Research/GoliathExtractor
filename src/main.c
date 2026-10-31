@@ -1,4 +1,4 @@
-#include "methyl_extractor.h"
+#include "goliath_extractor.h"
 
 static void print_usage(const char *prog)
 {
@@ -63,7 +63,7 @@ static int cmp_chr_len_desc(const void *a, const void *b)
 
 int main(int argc, char *argv[])
 {
-    fprintf(stderr, "Program: MethylExtractor\nParameters:\n");
+    fprintf(stderr, "Program: GoliathExtractor\nParameters:\n");
     for (int i = 0; i < argc; i++)
         fprintf(stderr, "  Arg %d: %s\n", i, argv[i]);
 
@@ -558,7 +558,7 @@ int main(int argc, char *argv[])
     if (mapping_ref_file)
         free(mapping_ref_file);
 
-    log_time("Processing complete. MethylExtractor has finished.\n");
+    log_time("Processing complete. GoliathExtractor has finished.\n");
 
     return 0;
 }

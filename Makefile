@@ -1,4 +1,4 @@
-# Makefile for MethylExtractor
+# Makefile for goliath-extractor
 
 # Detect architecture
 ARCH := $(shell uname -m)
@@ -81,27 +81,27 @@ plugin: $(PLUGIN_SO)
 # Note: Static linking is challenging due to missing static libraries for HTSlib and HDF5 dependencies
 # (like libdeflate, rans, arith, fqz, tok3, and szip). Consider using dynamic linking instead.
 # If static linking is required, you may need to build HTSlib and HDF5 from source with static libraries.
-static: $(STATIC_DIR)/MethylExtractor
+static: $(STATIC_DIR)/goliath-extractor
 
-dynamic: $(DYNAMIC_DIR)/MethylExtractor
+dynamic: $(DYNAMIC_DIR)/goliath-extractor
 
-debug: $(DEBUG_DIR)/MethylExtractor
+debug: $(DEBUG_DIR)/goliath-extractor
 
-$(STATIC_DIR)/MethylExtractor: $(SRCS)
+$(STATIC_DIR)/goliath-extractor: $(SRCS)
 	mkdir -p $(STATIC_DIR)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -L$(HTSLIB_DIR)/lib -L$(HDF5_LIB_PATH) $(HTSLIB_LIBS) $(HDF5_LIBS) $(STATIC_LIBS) -static
 
-$(DYNAMIC_DIR)/MethylExtractor: $(SRCS)
+$(DYNAMIC_DIR)/goliath-extractor: $(SRCS)
 	mkdir -p $(DYNAMIC_DIR)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -L$(HTSLIB_DIR)/lib -L$(HDF5_LIB_PATH) $(HTSLIB_LIBS) $(HDF5_LIBS) -lpthread -lm
 
-$(DEBUG_DIR)/MethylExtractor: $(SRCS)
+$(DEBUG_DIR)/goliath-extractor: $(SRCS)
 	mkdir -p $(DEBUG_DIR)
 	$(CC) $(DEBUG_CFLAGS) -o $@ $^ $(LDFLAGS) -L$(HTSLIB_DIR)/lib -L$(HDF5_LIB_PATH) $(HTSLIB_LIBS) $(HDF5_LIBS) -lpthread -lm
 
 install: dynamic $(PLUGIN_SO)
 	@echo "Checking architecture..."
-	@bin_arch=$$(file -b $(DYNAMIC_DIR)/MethylExtractor); \
+	@bin_arch=$$(file -b $(DYNAMIC_DIR)/goliath-extractor); \
 	plug_arch=$$(file -b $(PLUGIN_SO)); \
 	case "$(ARCH)" in \
 		aarch64) want="aarch64";; \
@@ -111,8 +111,9 @@ install: dynamic $(PLUGIN_SO)
 	echo "$$bin_arch" | grep -q "$$want" || { echo "Architecture mismatch: binary is for $$bin_arch but this machine is $(ARCH). Run make on this machine first."; exit 1; }; \
 	echo "$$plug_arch" | grep -q "$$want" || { echo "Architecture mismatch: plugin is for $$plug_arch but this machine is $(ARCH). Run make on this machine first."; exit 1; }
 	@echo "Installing binary and HDF5 Zstd plugin..."
-	sudo cp $(DYNAMIC_DIR)/MethylExtractor /usr/local/bin/
-	sudo chmod +x /usr/local/bin/MethylExtractor
+	sudo cp $(DYNAMIC_DIR)/goliath-extractor /usr/local/bin/
+	sudo chmod +x /usr/local/bin/goliath-extractor
+	sudo ln -sf goliath-extractor /usr/local/bin/MethylExtractor
 	sudo mkdir -p /usr/local/hdf5/lib/plugin
 	sudo cp $(PLUGIN_SO) /usr/local/hdf5/lib/plugin/
 	@if ! grep -q "HDF5_PLUGIN_PATH" $$HOME/.bashrc 2>/dev/null; then \
@@ -126,9 +127,9 @@ clean:
 
 # Path of the dynamic binary for this machine, for CI and packaging scripts.
 print-dynamic-bin:
-	@echo $(DYNAMIC_DIR)/MethylExtractor
+	@echo $(DYNAMIC_DIR)/goliath-extractor
 
-# Type-check Python sources (src/cap_coverage.py and tests/) with Pyrefly.
+# Type-check Python sources (goliath_extractor and tests/) with Pyrefly.
 typecheck:
 	poetry run pyrefly check
 

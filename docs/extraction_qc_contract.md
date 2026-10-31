@@ -1,12 +1,12 @@
 # Extraction QC files
 
-MethylExtractor writes three JSON documents. Schema names and versions are the string constants in `include/methyl_extractor.h`. Nothing in this program turns those numbers into a pass or fail.
+GoliathExtractor writes three JSON documents. Schema names and versions are the string constants in `include/goliath_extractor.h`. Nothing in this program turns those numbers into a pass or fail.
 
 Large integers are emitted with cJSON as doubles, so integers above 2^53 are not exact.
 
 ## `{name}.json` or `{name}-{ctx}.json`
 
-Written by `write_context_qc_json` next to a count file that was actually produced. `schema_name` is `methylextractor.context_qc`, `schema_version` is `1.0.0`.
+Written by `write_context_qc_json` next to a count file that was actually produced. `schema_name` is `goliath_extractor.context_qc`, `schema_version` is `1.0.0`.
 
 Legacy top-level fields, computed on sites that passed `--min-cov` after any cap rescaling:
 
@@ -58,7 +58,7 @@ Legacy top-level fields, computed on sites that passed `--min-cov` after any cap
 
 ## `{sample_id}.extraction_manifest.json`
 
-`write_extraction_manifest`. `metadata.schema_name` is `methylextractor.extraction_manifest`, `schema_version` `1.0.0`.
+`write_extraction_manifest`. `metadata.schema_name` is `goliath_extractor.extraction_manifest`, `schema_version` `1.0.0`.
 
 `metadata` also has `exported_at_utc`, `sample_id`, `sample_dir` (the output directory), `bam_file`, `reference`, `contexts_extracted` (`CG`, plus `CHG` and/or `CHH` when those flags were set), and `filters` (`min_mapq`, `min_phred`, `min_cov`, `cap_cov`, `split_context_files` as 0 or 1).
 
@@ -84,7 +84,7 @@ When the summed CG `num_positions` is greater than 0, `summary` also includes:
 
 ## `{sample_id}.timing.json`
 
-`write_extraction_timing`. Top-level `schema_name` is `methylextractor.timing`, `schema_version` `1.0.0`.
+`write_extraction_timing`. Top-level `schema_name` is `goliath_extractor.timing`, `schema_version` `1.0.0`.
 
 | Field | Meaning |
 |-------|---------|

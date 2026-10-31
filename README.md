@@ -1,6 +1,6 @@
-# MethylExtractor
+# GoliathExtractor
 
-MethylExtractor extracts cytosine methylation counts from a coordinate-sorted, indexed bisulfite BAM and a reference FASTA. This documentation matches the source at release **2026.10.1** (tag `v2026.10.1`).
+GoliathExtractor extracts cytosine methylation counts from a coordinate-sorted, indexed bisulfite BAM and a reference FASTA. This documentation matches the source at release **2026.10.1** (tag `v2026.10.1`).
 
 It is a performance-focused fork of [MethylDackel](https://github.com/dpryan79/MethylDackel) (Devon P. Ryan, MIT). The fork keeps that license. See [Differences from MethylDackel](docs/upstream.md) and [`LICENSE`](LICENSE).
 
@@ -12,18 +12,18 @@ Debian or Ubuntu, from a clone of this repository:
 
 ```bash
 make deps    # apt packages, including htslib, HDF5, and zstd (uses sudo)
-make         # build/dynamic/<arch>/MethylExtractor
+make         # build/dynamic/<arch>/goliath-extractor
 make plugin  # optional Zstd HDF5 filter (libH5Zzstd.so)
 ```
 
-`<arch>` is `x64` on x86_64 and `arm64` on aarch64. `make` does not run `sudo`. `make install` copies the binary to `/usr/local/bin/MethylExtractor` and the plugin to `/usr/local/hdf5/lib/plugin`, and it appends `HDF5_PLUGIN_PATH` to `~/.bashrc` when that line is absent. It refuses to install a binary or plugin built for another machine.
+`<arch>` is `x64` on x86_64 and `arm64` on aarch64. `make` does not run `sudo`. `make install` copies the binary to `/usr/local/bin/goliath-extractor` and the plugin to `/usr/local/hdf5/lib/plugin`, and it appends `HDF5_PLUGIN_PATH` to `~/.bashrc` when that line is absent. It refuses to install a binary or plugin built for another machine.
 
-GitHub Release tag `v2026.10.1` publishes `methyl-extractor-linux-amd64.tar.gz` and `methyl-extractor-linux-aarch64.tar.gz` (each with a `.sha256`). The tarballs are dynamically linked and carry their non-glibc libraries under `lib/`. Details: [Install](docs/install.md), [Release packages](docs/release_packaging.md).
+GitHub Release tag `v2026.10.1` publishes `goliath-extractor-linux-amd64.tar.gz` and `goliath-extractor-linux-aarch64.tar.gz` (each with a `.sha256`). The tarballs are dynamically linked and carry their non-glibc libraries under `lib/`. Details: [Install](docs/install.md), [Release packages](docs/release_packaging.md).
 
 ## Usage
 
 ```bash
-build/dynamic/x64/MethylExtractor [options] <input.bam> [output_dir] [ref.fa]
+build/dynamic/x64/goliath-extractor [options] <input.bam> [output_dir] [ref.fa]
 ```
 
 The BAM must be coordinate-sorted and indexed. The output directory is the second positional argument or `-o` / `--output-dir` (one of the two is required; the directory is created). The reference FASTA is the optional third positional. It overrides `reference` in the chromosome map. One of those two must name an indexed FASTA.
@@ -41,7 +41,7 @@ Chromosome names come from `chrom_mapping.json` next to the BAM, or from `-m` / 
 
 ### Options
 
-Defaults are the constants in `include/methyl_extractor.h` and the parser in `src/main.c`.
+Defaults are the constants in `include/goliath_extractor.h` and the parser in `src/main.c`.
 
 | Option | Default | Effect |
 |--------|---------|--------|
@@ -66,7 +66,7 @@ Defaults are the constants in `include/methyl_extractor.h` and the parser in `sr
 | `--max-rss-gb INT` | `32` | RSS gate for chromosome parallelism |
 
 ```bash
-MethylExtractor \
+goliath-extractor \
   -t 16 -q 30 -p 20 -c 4 -G -H -s -f hdf5 -z 6 \
   -m chrom_mapping.json -o results \
   sample.bam reference.fa
@@ -89,7 +89,7 @@ HDF5 (default) is a one-dimensional compound dataset named `methylation_data`:
 
 When `-z` is greater than 0 and `H5Zfilter_avail(32015)` succeeds, the dataset uses the Zstd filter (id **32015**). Otherwise the writer uses gzip/deflate at `min(level, 9)`, or uncompressed data if deflate cannot be set. Startup logs whether `HDF5_PLUGIN_PATH` can see the plugin built by `make plugin`.
 
-Every file that `flush_buffer` actually writes gets a JSON sidecar (`1-CG.h5` → `1-CG.json`) with the legacy totals plus `methylextractor.context_qc` version `1.0.0`. After the run, the output directory receives `{sample_id}.extraction_manifest.json` and `{sample_id}.timing.json`. `sample_id` is the output directory's final path component, with the suffix after the last `.` removed. Pass the directory without a trailing slash. MethylExtractor records metrics and does not assign pass or fail.
+Every file that `flush_buffer` actually writes gets a JSON sidecar (`1-CG.h5` → `1-CG.json`) with the legacy totals plus `goliath_extractor.context_qc` version `1.0.0`. After the run, the output directory receives `{sample_id}.extraction_manifest.json` and `{sample_id}.timing.json`. `sample_id` is the output directory's final path component, with the suffix after the last `.` removed. Pass the directory without a trailing slash. GoliathExtractor records metrics and does not assign pass or fail.
 
 `-R` adds `{name}-{ctx}.patterns.h5` (CG always; CHG/CHH only when `--split` is also set). `--mhap` adds `{name}-CG.mhap.h5`.
 
@@ -101,7 +101,7 @@ Field-level layouts: [Output](docs/output.md). QC JSON: [Extraction QC](docs/ext
 
 ## Development checks
 
-Python under `src/cap_coverage.py` and `tests/` is type-checked with Pyrefly. That module is a pandas helper; the binary does not call it.
+Python under `src/goliath_extractor/` and `tests/` is type-checked with Pyrefly. That module is a pandas helper; the binary does not call it.
 
 ```bash
 poetry install
@@ -109,7 +109,7 @@ poetry run pyrefly check
 # or: make typecheck
 ```
 
-HTML docs are published at [goliath-research.github.io/MethylExtractor](https://goliath-research.github.io/MethylExtractor/). Preview locally:
+HTML docs are published at [goliath-research.github.io/GoliathExtractor](https://goliath-research.github.io/GoliathExtractor/). Preview locally:
 
 ```bash
 pip install mkdocs-material
@@ -118,4 +118,4 @@ mkdocs serve
 
 ## License
 
-MIT. Copyright (c) 2015 Devon P. Ryan and the MethylExtractor contributors. Copies must keep the copyright and permission notice in [`LICENSE`](LICENSE). Vendored cJSON remains Copyright (c) 2009-2017 Dave Gamble and cJSON contributors. HTSlib, HDF5, and Zstd keep their own licenses.
+MIT. Copyright (c) 2015 Devon P. Ryan and the GoliathExtractor contributors. Copies must keep the copyright and permission notice in [`LICENSE`](LICENSE). Vendored cJSON remains Copyright (c) 2009-2017 Dave Gamble and cJSON contributors. HTSlib, HDF5, and Zstd keep their own licenses.

@@ -57,3 +57,4 @@ build/
 
 # MkDocs HTML (`mkdocs build`). CI builds the site and does not publish it.
 site/
+*.pyc

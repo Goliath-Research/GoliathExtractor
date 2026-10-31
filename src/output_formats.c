@@ -1,4 +1,4 @@
-#include "methyl_extractor.h"
+#include "goliath_extractor.h"
 
 void merge_filter_stats(FilterStats *dst, const FilterStats *src)
 {
