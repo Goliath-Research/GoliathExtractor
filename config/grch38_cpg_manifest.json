@@ -1,7 +1,7 @@
 {
   "reference": "GRCh38 primary assembly",
   "context": "CG",
-  "note": "Per-strand CpG sites (C in CG plus G in CG), matching MethylExtractor enumeration",
+  "note": "Per-strand CpG sites (C in CG plus G in CG), matching GoliathExtractor enumeration",
   "chromosomes": {
     "1": 4750318,
     "2": 4385340,

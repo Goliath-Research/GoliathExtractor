@@ -15,21 +15,24 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _resolve_extractor_bin() -> Path:
-    env = (os.environ.get("METHYL_EXTRACTOR_BIN") or "").strip()
-    if env:
-        p = Path(env)
-        if p.is_file():
-            return p
+    for env_key in ("GOLIATH_EXTRACTOR_BIN", "METHYL_EXTRACTOR_BIN"):
+        env = (os.environ.get(env_key) or "").strip()
+        if env:
+            p = Path(env)
+            if p.is_file():
+                return p
     for candidate in (
+        REPO_ROOT / "build" / "dynamic" / "arm64" / "goliath-extractor",
+        REPO_ROOT / "build" / "dynamic" / "x64" / "goliath-extractor",
         REPO_ROOT / "build" / "dynamic" / "arm64" / "MethylExtractor",
         REPO_ROOT / "build" / "dynamic" / "x64" / "MethylExtractor",
-        Path("/work/goliath/methyl-extractor-aarch64/bin/MethylExtractor"),
-        Path("/work/goliath/methyl-extractor-amd64/bin/MethylExtractor"),
+        Path("/work/goliath/goliath-extractor-aarch64/bin/goliath-extractor"),
+        Path("/work/goliath/goliath-extractor-amd64/bin/goliath-extractor"),
     ):
         if candidate.is_file():
             return candidate
     raise FileNotFoundError(
-        "MethylExtractor binary not found; set METHYL_EXTRACTOR_BIN or build with make"
+        "GoliathExtractor binary not found; set GOLIATH_EXTRACTOR_BIN or build with make"
     )
 
 
@@ -60,7 +63,7 @@ def _run_extractor(work: Path, out_dir: Path, extra_args: list[str] | None = Non
     proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
     if proc.returncode != 0:
         raise AssertionError(
-            f"MethylExtractor failed ({proc.returncode}):\n"
+            f"GoliathExtractor failed ({proc.returncode}):\n"
             f"stdout:\n{proc.stdout}\nstderr:\n{proc.stderr}"
         )
     return out_dir
@@ -90,7 +93,7 @@ def test_bam_to_manifest_schema(toy_run: Path) -> None:
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
     meta = manifest["metadata"]
-    assert meta["schema_name"] == "methylextractor.extraction_manifest"
+    assert meta["schema_name"] == "goliath_extractor.extraction_manifest"
     assert meta["schema_version"] == "1.0.0"
     assert meta["sample_id"] == "sample_toy"
     assert "CG" in meta["contexts_extracted"]
@@ -119,7 +122,7 @@ def test_bam_to_manifest_schema(toy_run: Path) -> None:
     assert h5.is_file() and h5.stat().st_size > 0
     assert ctx_json.is_file()
     ctx = json.loads(ctx_json.read_text(encoding="utf-8"))
-    assert ctx["metadata"]["schema_name"] == "methylextractor.context_qc"
+    assert ctx["metadata"]["schema_name"] == "goliath_extractor.context_qc"
     assert ctx["sites"]["sites_in_reference"] >= 1
     assert "read_filtering" in ctx
 
@@ -141,7 +144,7 @@ def test_timing_json_written(toy_run: Path) -> None:
     timing_path = toy_run / "sample_toy.timing.json"
     assert timing_path.is_file()
     timing = json.loads(timing_path.read_text(encoding="utf-8"))
-    assert timing["schema_name"] == "methylextractor.timing"
+    assert timing["schema_name"] == "goliath_extractor.timing"
     assert timing["n_chromosomes"] >= 1
     assert "total_ms" in timing
     assert "bam_ms" in timing

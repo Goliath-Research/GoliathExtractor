@@ -15,7 +15,7 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "detail": "Build MethylExtractor (release, dynamic linking)"
+            "detail": "Build GoliathExtractor (release, dynamic linking)"
         },
         {
             "label": "make debug",
@@ -28,7 +28,7 @@
                 "$gcc"
             ],
             "group": "build",
-            "detail": "Build MethylExtractor with debug symbols"
+            "detail": "Build GoliathExtractor with debug symbols"
         },
         {
             "label": "make clean",

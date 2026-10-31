@@ -1,16 +1,16 @@
-# Contributing to MethylExtractor
+# Contributing to GoliathExtractor
 
-Upstream repository: [Goliath-Research/MethylExtractor](https://github.com/Goliath-Research/MethylExtractor).
+Upstream repository: [Goliath-Research/GoliathExtractor](https://github.com/Goliath-Research/GoliathExtractor).
 
-Thank you for your interest in contributing to MethylExtractor! We welcome contributions from the community to help improve this tool.
+Thank you for your interest in contributing to GoliathExtractor! We welcome contributions from the community to help improve this tool.
 
 ## Getting Started
 
 1.  **Fork the repository** on GitHub.
 2.  **Clone your fork** locally:
     ```bash
-    git clone https://github.com/your-username/MethylExtractor.git
-    cd MethylExtractor
+    git clone https://github.com/your-username/GoliathExtractor.git
+    cd GoliathExtractor
     ```
 3.  **Create a new branch** for your feature or bug fix:
     ```bash

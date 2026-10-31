@@ -1,5 +1,5 @@
 ---
-name: MethylExtractor release CI
+name: GoliathExtractor release CI
 overview: GitHub Actions workflows that build the dynamic binary on pull requests and publish per-arch tarballs to GitHub Releases on v* tags.
 todos:
   - id: pr-pipeline
@@ -9,12 +9,12 @@ todos:
     content: .github/workflows/release.yml builds amd64 and aarch64 on Ubuntu 22.04 and uploads GitHub Release assets
     status: completed
   - id: bundle-libs
-    content: scripts/package_methyl_extractor.sh --bundle-libs plus scripts/bundle_libs.sh
+    content: scripts/package_goliath_extractor.sh --bundle-libs plus scripts/bundle_libs.sh
     status: completed
 isProject: false
 ---
 
-# MethylExtractor release CI
+# GoliathExtractor release CI
 
 Current workflows (release 2026.10.1):
 
@@ -22,7 +22,7 @@ Current workflows (release 2026.10.1):
 |----------|--------|---------|--------|
 | `.github/workflows/build.yml` | `ubuntu-latest` | Push to `main` and pull requests | Packaging fixtures, `make dynamic`, `--help`, Pyrefly, product JSON, MkDocs build (no deploy) |
 | `.github/workflows/pages.yml` | `ubuntu-latest` | Push to `main`, or manual dispatch | MkDocs build and GitHub Pages deploy |
-| `.github/workflows/release.yml` | `ubuntu-22.04`, `ubuntu-22.04-arm` | Tags `v*`, or a manual `releaseVersion` | `methyl-extractor-linux-{amd64,aarch64}.tar.gz` plus `.sha256` |
+| `.github/workflows/release.yml` | `ubuntu-22.04`, `ubuntu-22.04-arm` | Tags `v*`, or a manual `releaseVersion` | `goliath-extractor-linux-{amd64,aarch64}.tar.gz` plus `.sha256` |
 
 The release job's smoke matrix unpacks those tarballs in `ubuntu:22.04`, `ubuntu:24.04`, `ubuntu:latest`, and `debian:stable-slim` before `publish` creates or updates the GitHub Release. Publish does not run on pull requests.
 

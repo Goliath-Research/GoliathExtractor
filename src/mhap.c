@@ -1,4 +1,4 @@
-#include "methyl_extractor.h"
+#include "goliath_extractor.h"
 
 #define MHAP_READ_CAP0 1024
 #define MHAP_OBS_CAP0 4096

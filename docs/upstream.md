@@ -1,13 +1,13 @@
 # Differences from MethylDackel
 
-MethylExtractor is a fork of [MethylDackel](https://github.com/dpryan79/MethylDackel) (earlier name PileOMeth) by Devon P. Ryan. Upstream extracts per-cytosine methylation from coordinate-sorted, indexed BS-seq alignments. If you use this fork in work that also depends on MethylDackel behavior, cite that repository: <https://github.com/dpryan79/MethylDackel>.
+GoliathExtractor is a fork of [MethylDackel](https://github.com/dpryan79/MethylDackel) (earlier name PileOMeth) by Devon P. Ryan. Upstream extracts per-cytosine methylation from coordinate-sorted, indexed BS-seq alignments. If you use this fork in work that also depends on MethylDackel behavior, cite that repository: <https://github.com/dpryan79/MethylDackel>.
 
 ## License
 
-Both programs are MIT. [`LICENSE`](https://github.com/Goliath-Research/MethylExtractor/blob/main/LICENSE) in this repository keeps:
+Both programs are MIT. [`LICENSE`](https://github.com/Goliath-Research/GoliathExtractor/blob/main/LICENSE) in this repository keeps:
 
 - Copyright (c) 2015 Devon P. Ryan
-- Copyright (c) contributors to MethylExtractor
+- Copyright (c) contributors to GoliathExtractor
 
 The MIT permission notice must stay on copies and substantial portions of the software. Local changes are under the same MIT terms. Vendored `src/cjson/cJSON.c` keeps Copyright (c) 2009-2017 Dave Gamble and cJSON contributors. HTSlib, HDF5, and Zstd are linked under their own licenses and are not relicensed by this file.
 
@@ -17,7 +17,7 @@ One executable reads a BAM plus a reference and writes per-chromosome counts. Th
 
 Upstream `MethylDackel` is a multi-command tool. The behaviors below are from [its README](https://github.com/dpryan79/MethylDackel/blob/master/README.md) as published upstream, set next to what `src/` in this repository does.
 
-| Topic | MethylDackel | MethylExtractor 2026.10.1 |
+| Topic | MethylDackel | GoliathExtractor 2026.10.1 |
 |-------|----------------|---------------------------|
 | Commands | `extract`, `mbias`, `mergeContext`, `perRead` | A single `main`. No mbias plots and no merge step |
 | Default output | bedGraph (`chromosome`, 0-based half-open interval, percent, methylated, unmethylated), optional methylKit / fraction / logit / counts | HDF5 dataset `methylation_data` (`pos` 1-based, `mC`, `uC`, `tnc`), optional TSV, JSON sidecar |
@@ -39,4 +39,4 @@ Calling conventions that are still in the same family: Bismark `XG` / `XM` tags 
 
 ## Dependencies this fork uses instead of libBigWig
 
-The dynamic link line is HTSlib, HDF5 (serial), pthread, and libm. Zstd is used through the HDF5 plugin at runtime, not through a direct `-lzstd` on the MethylExtractor link line (`make dynamic`). cJSON is compiled in.
+The dynamic link line is HTSlib, HDF5 (serial), pthread, and libm. Zstd is used through the HDF5 plugin at runtime, not through a direct `-lzstd` on the GoliathExtractor link line (`make dynamic`). cJSON is compiled in.

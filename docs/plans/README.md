@@ -4,7 +4,7 @@ These notes record work that landed in this repository. The running description 
 
 | Note | What it tracks in this tree |
 |------|-----------------------------|
-| [Release CI](methyl-extractor-release-ci.plan.md) | `.github/workflows/build.yml`, `pages.yml`, and `release.yml` |
-| [C performance](methylextractor-c-perf.plan.md) | `--chrom-parallel`, `--max-rss-gb`, `{sample}.timing.json` |
+| [Release CI](goliath-extractor-release-ci.plan.md) | `.github/workflows/build.yml`, `pages.yml`, and `release.yml` |
+| [C performance](goliath-extractor-c-perf.plan.md) | `--chrom-parallel`, `--max-rss-gb`, `{sample}.timing.json` |
 
 CI behavior is summarized in the repository file `ci/README.md` (one level above `docs/`).

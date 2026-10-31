@@ -1,7 +1,7 @@
 # Command line
 
 ```text
-MethylExtractor [options] <input.bam> [output_dir] [ref.fa]
+goliath-extractor [options] <input.bam> [output_dir] [ref.fa]
 ```
 
 Implemented in `src/main.c`. The program prints the raw `argv` to stderr before doing work, including for `--help` (help is handled after that banner). `--help` / `-h` then prints usage and returns 0.

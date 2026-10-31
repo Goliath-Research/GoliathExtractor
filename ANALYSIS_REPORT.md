@@ -1,8 +1,8 @@
-# MethylExtractor vs. MethylDackel — Software Engineering Analysis
+# GoliathExtractor vs. MethylDackel — Software Engineering Analysis
 
 **Date:** 2026-06-11 (refreshed 2026-08-17)
-**Scope:** Source-level review of MethylExtractor (`src/`, `include/`, build system, scripts, docs) and comparison against MethylDackel as the reference WGBS methylation extractor.
-**Goal:** Confirm whether MethylExtractor performs a *similar job* to MethylDackel, and whether it does so with *better performance* and *better organization* from a Software Engineering standpoint.
+**Scope:** Source-level review of GoliathExtractor (`src/`, `include/`, build system, scripts, docs) and comparison against MethylDackel as the reference WGBS methylation extractor.
+**Goal:** Confirm whether GoliathExtractor performs a *similar job* to MethylDackel, and whether it does so with *better performance* and *better organization* from a Software Engineering standpoint.
 
 ---
 
@@ -15,20 +15,20 @@
 | Is the **performance better**? | **Partially.** Intra-chromosome region parallelism plus memory-gated `--chrom-parallel` (default 2). Published “`-z 9` = 5× faster” claims are still unsubstantiated. Gate: ≤6 min wall on a sample that was ~12 min at `threads=10` + read-level. |
 | Is the **engineering quality better**? | **Improved since the June 2026 review.** Overlap mate handling and extraction QC JSON contracts are in production; BAM→manifest integration tests exist under `tests/integration/`. Remaining gaps: chromosome parallelism, stronger automated coverage, doc hygiene. |
 
-**Bottom line:** MethylExtractor is the MethylPipeline **linear / stock-pangenome** extraction tool. Its JSON exports feed **`sample.extraction_qc`** (`methylextractionqc`), not alignment QC (`methylalignmentqc`). For `pangenome_wgbs`, methylGrapher MethylCall replaces MethylExtractor but emits a compatible extraction manifest.
+**Bottom line:** GoliathExtractor is the MethylPipeline **linear / stock-pangenome** extraction tool. Its JSON exports feed **`sample.extraction_qc`** (`methylextractionqc`), not alignment QC (`methylalignmentqc`). For `pangenome_wgbs`, methylGrapher MethylCall replaces GoliathExtractor but emits a compatible extraction manifest.
 
 ---
 
 ## 2. What the Tool Does (as implemented)
 
-MethylExtractor is a multi-file C program built on HTSlib + HDF5:
+GoliathExtractor is a multi-file C program built on HTSlib + HDF5:
 
 - **`src/main.c`** — CLI parsing, chromosome-mapping load, reference + BAM header load, thread orchestration.
 - **`src/bam_processing.c`** — per-region BAM iteration, strand inference, mC/uC counting, **overlapping-mate clip**, chromosome driver, JSON mapping loader.
 - **`src/output_formats.c`** — coverage filtering/capping, TXT writer, HDF5 writer (compound type + Zstd/gzip), statistics JSON trigger.
 - **`src/extraction_export.c`** — context QC sidecars + sample `extraction_manifest.json`.
 - **`src/utils.c`** — context detection (CpG/CHG/CHH), trinucleotide encode/decode, site enumeration, buffer init.
-- **`include/methyl_extractor.h`** — shared structs and constants.
+- **`include/goliath_extractor.h`** — shared structs and constants.
 
 Pipeline per chromosome:
 1. Enumerate all candidate cytosine sites from the reference and pre-fill a dense `MethylRecord` buffer.
@@ -42,7 +42,7 @@ The compact on-disk record (12 bytes/site, Zstd HDF5, `{chr}-{ctx}.h5` with `--s
 
 ## 3. Functional Comparison with MethylDackel
 
-| Capability | MethylDackel | MethylExtractor | Notes |
+| Capability | MethylDackel | GoliathExtractor | Notes |
 |------------|--------------|-----------------|-------|
 | Input | Sorted+indexed BAM/CRAM via HTSlib | Sorted+indexed BAM via HTSlib | Equivalent backend. |
 | Contexts | CpG, CHG, CHH | CpG (always), CHG (`-G`), CHH (`-H`) | Equivalent. |
@@ -59,7 +59,7 @@ The compact on-disk record (12 bytes/site, Zstd HDF5, `{chr}-{ctx}.h5` with `--s
 
 ---
 
-## 4. Organization / Storage — where MethylExtractor is genuinely better
+## 4. Organization / Storage — where GoliathExtractor is genuinely better
 
 1. Compact 12-byte binary record vs multi-column ASCII.
 2. Per-chromosome / per-context partitioning for parallel downstream reads.
@@ -102,12 +102,12 @@ Dense per-chromosome counting arrays; `--chrom-parallel` + `--max-rss-gb` bound 
 
 ## 6. QC boundary (alignment vs extraction)
 
-| Stage | Tooling | MethylExtractor role |
+| Stage | Tooling | GoliathExtractor role |
 |-------|---------|----------------------|
 | Alignment QC | MethylPipeline `methylalignmentqc` / `sample.methyl_qc` | **None** |
 | Extraction QC | MethylPipeline `methylextractionqc` / `sample.extraction_qc` | **Producer** of manifests / context JSON |
 
-Do not describe MethylExtractor JSON as “alignment QC exports.”
+Do not describe GoliathExtractor JSON as “alignment QC exports.”
 
 ---
 
@@ -121,7 +121,7 @@ Do not describe MethylExtractor JSON as “alignment QC exports.”
 
 ```bash
 python3 -m pytest tests/integration/test_bam_to_manifest.py -q
-# or: METHYL_EXTRACTOR_BIN=/path/to/MethylExtractor pytest ...
+# or: METHYL_EXTRACTOR_BIN=/path/to/GoliathExtractor pytest ...
 ```
 
 ---

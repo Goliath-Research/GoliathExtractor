@@ -1,8 +1,8 @@
-site_name: MethylExtractor
+site_name: GoliathExtractor
 site_description: Methylation extraction from coordinate-sorted bisulfite BAM files (release 2026.10.1).
-site_url: https://goliath-research.github.io/MethylExtractor/
-repo_url: https://github.com/Goliath-Research/MethylExtractor
-repo_name: Goliath-Research/MethylExtractor
+site_url: https://goliath-research.github.io/GoliathExtractor/
+repo_url: https://github.com/Goliath-Research/GoliathExtractor
+repo_name: Goliath-Research/GoliathExtractor
 docs_dir: docs
 theme:
   name: material
@@ -40,7 +40,7 @@ nav:
   - MethylDackel: upstream.md
   - Notes:
       - Plans: plans/README.md
-      - Release CI plan: plans/methyl-extractor-release-ci.plan.md
-      - Performance plan: plans/methylextractor-c-perf.plan.md
+      - Release CI plan: plans/goliath-extractor-release-ci.plan.md
+      - Performance plan: plans/goliath-extractor-c-perf.plan.md
 # Build locally with `mkdocs build` or `mkdocs serve`.
 # A push to main publishes this site with .github/workflows/pages.yml.

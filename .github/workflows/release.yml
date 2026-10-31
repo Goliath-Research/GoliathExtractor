@@ -1,4 +1,4 @@
-name: MethylExtractor release
+name: GoliathExtractor release
 
 on:
   push:
@@ -67,8 +67,8 @@ jobs:
             exit 1
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          OUT="${{ runner.temp }}/methyl-extractor-linux-${{ matrix.arch }}.tar.gz"
-          bash scripts/package_methyl_extractor.sh \
+          OUT="${{ runner.temp }}/goliath-extractor-linux-${{ matrix.arch }}.tar.gz"
+          bash scripts/package_goliath_extractor.sh \
             --build-dir . \
             --arch "${{ matrix.arch }}" \
             --version "$VERSION" \
@@ -79,10 +79,10 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: methyl-extractor-linux-${{ matrix.arch }}
+          name: goliath-extractor-linux-${{ matrix.arch }}
           path: |
-            ${{ runner.temp }}/methyl-extractor-linux-${{ matrix.arch }}.tar.gz
-            ${{ runner.temp }}/methyl-extractor-linux-${{ matrix.arch }}.tar.gz.sha256
+            ${{ runner.temp }}/goliath-extractor-linux-${{ matrix.arch }}.tar.gz
+            ${{ runner.temp }}/goliath-extractor-linux-${{ matrix.arch }}.tar.gz.sha256
 
   smoke:
     # Bare images, no extra packages: every non-glibc lib must come from the
@@ -104,7 +104,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: methyl-extractor-linux-${{ matrix.arch }}
+          name: goliath-extractor-linux-${{ matrix.arch }}
           path: ${{ runner.temp }}/artifacts
 
       - name: Smoke test in ${{ matrix.image }}
@@ -114,7 +114,7 @@ jobs:
             -v "${{ runner.temp }}/artifacts:/artifacts:ro" \
             -v "$PWD/scripts:/scripts:ro" \
             "${{ matrix.image }}" \
-            sh /scripts/smoke_test_tarball.sh /artifacts/methyl-extractor-linux-${{ matrix.arch }}.tar.gz
+            sh /scripts/smoke_test_tarball.sh /artifacts/goliath-extractor-linux-${{ matrix.arch }}.tar.gz
 
   publish:
     needs: [package, smoke]
@@ -138,13 +138,13 @@ jobs:
           fi
           TAG="v${VERSION}"
           shopt -s nullglob
-          FILES=( "${{ runner.temp }}/artifacts"/methyl-extractor-linux-*.tar.gz* )
+          FILES=( "${{ runner.temp }}/artifacts"/goliath-extractor-linux-*.tar.gz* )
           [[ ${#FILES[@]} -gt 0 ]] || { echo "No tarballs to publish"; exit 1; }
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$TAG" "${FILES[@]}" --clobber --repo "$GITHUB_REPOSITORY"
           else
             gh release create "$TAG" \
-              --title "MethylExtractor ${VERSION}" \
+              --title "GoliathExtractor ${VERSION}" \
               --generate-notes \
               --repo "$GITHUB_REPOSITORY" \
               "${FILES[@]}"
